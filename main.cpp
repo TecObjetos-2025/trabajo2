@@ -154,7 +154,6 @@ int main() {
     int opcion, cantidad, idPedido = 1;
     bool salir = false;
 
-    // Crear un pedido
     Pedido &pedido = sistema.crearPedido(idPedido);
 
     while (!salir) {
@@ -163,6 +162,7 @@ int main() {
         cout << "2. Agregar producto al pedido\n";
         cout << "3. Finalizar pedido\n";
         cout << "4. Salir\n";
+        cout << "5. Agregar nuevo producto al menú\n"; 
         cout << "Seleccione una opcion: ";
         cin >> opcion;
 
@@ -180,7 +180,7 @@ int main() {
             try {
                 Producto p = menu.obtenerProducto(idProducto);
                 sistema.agregarProductoAPedido(pedido, p, cantidad);
-                cout << "Producto agregado!" << endl;
+                cout << "Producto agregado al pedido!" << endl;
             } catch (exception &e) {
                 cout << "Error: " << e.what() << endl;
             }
@@ -194,6 +194,26 @@ int main() {
         case 4:
             salir = true;
             break;
+        case 5: {  
+            int idNuevo;
+            string nombreNuevo, categoriaNueva;
+            double precioNuevo;
+
+            cout << "Ingrese ID del nuevo producto: ";
+            cin >> idNuevo;
+            cin.ignore(); 
+            cout << "Nombre del producto: ";
+            getline(cin, nombreNuevo);
+            cout << "Precio: ";
+            cin >> precioNuevo;
+            cin.ignore();
+            cout << "Categoria: ";
+            getline(cin, categoriaNueva);
+
+            menu.agregarProducto(Producto(idNuevo, nombreNuevo, precioNuevo, categoriaNueva));
+            cout << "Producto agregado al menú exitosamente!\n";
+            break;
+        }
         default:
             cout << "Opcion invalida.\n";
         }
@@ -201,3 +221,4 @@ int main() {
 
     return 0;
 }
+
