@@ -8,7 +8,7 @@ Pedido::Pedido(int id, const Cliente &cliente)
 // Agregar items
 void Pedido::agregarItem(const Producto &producto, int cantidad)
 {
-    // Añadir al final
+    // Añadir al final (se crea automaticamente el objeto)
     items.emplace_back(producto, cantidad);
 }
 

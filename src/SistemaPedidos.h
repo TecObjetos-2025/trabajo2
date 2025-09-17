@@ -30,6 +30,8 @@ public:
     Pedido &crearPedido(Cliente &cliente);
     void agregarProductoAPedido(Pedido &pedido, int idProducto, int cantidad);
 
+    void finalizarPedido(Pedido &pedido);
+
     // Métodos del patrón Observer
     void agregarObservador(Observador *obs);
     void notificarObservadores(const Pedido &pedido);
