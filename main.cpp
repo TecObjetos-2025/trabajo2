@@ -5,38 +5,53 @@ using namespace std;
 
 // -------------------- Producto --------------------
 class Producto {
-public:
+private:
     int id;
     string nombre;
     double precio;
     string categoria;
 
+public:
     Producto(int id, string nombre, double precio, string categoria)
         : id(id), nombre(nombre), precio(precio), categoria(categoria) {}
+
+    // Getters
+    int getId() const { return id; }
+    string getNombre() const { return nombre; }
+    double getPrecio() const { return precio; }
+    string getCategoria() const { return categoria; }
+
+    // Setter (solo para precio como ejemplo de modificación controlada)
+    void setPrecio(double nuevoPrecio) { precio = nuevoPrecio; }
 };
 
 // -------------------- ItemPedido --------------------
 class ItemPedido {
-public:
+private:
     Producto producto;
     int cantidad;
 
+public:
     ItemPedido(Producto producto, int cantidad)
         : producto(producto), cantidad(cantidad) {}
 
-    double obtenerSubtotal() {
-        return producto.precio * cantidad;
+    double obtenerSubtotal() const {
+        return producto.getPrecio() * cantidad;
     }
+
+    Producto getProducto() const { return producto; }
+    int getCantidad() const { return cantidad; }
 };
 
 // -------------------- Pedido --------------------
 class Pedido {
-public:
+private:
     int id;
     double total;
     string estado;
     vector<ItemPedido> items;
 
+public:
     Pedido(int id) : id(id), total(0), estado("EN_PROCESO") {}
 
     void agregarItem(Producto producto, int cantidad) {
@@ -50,34 +65,44 @@ public:
         }
     }
 
-    void marcarComoPagado() {
-        estado = "PAGADO";
-    }
+    void marcarComoPagado() { estado = "PAGADO"; }
+
+    // Getters
+    int getId() const { return id; }
+    double getTotal() const { return total; }
+    string getEstado() const { return estado; }
+    vector<ItemPedido> getItems() const { return items; }
 };
 
 // -------------------- Cliente --------------------
 class Cliente {
-public:
+private:
     int id;
     string nombre;
     string telefono;
 
+public:
     Cliente(int id, string nombre, string telefono)
         : id(id), nombre(nombre), telefono(telefono) {}
+
+    int getId() const { return id; }
+    string getNombre() const { return nombre; }
+    string getTelefono() const { return telefono; }
 };
 
 // -------------------- MenuCafeteria --------------------
 class MenuCafeteria {
-public:
+private:
     vector<Producto> productosDisponibles;
 
+public:
     void agregarProducto(Producto producto) {
         productosDisponibles.push_back(producto);
     }
 
     Producto obtenerProducto(int id) {
         for (auto &p : productosDisponibles) {
-            if (p.id == id) return p;
+            if (p.getId() == id) return p;
         }
         throw runtime_error("Producto no encontrado");
     }
@@ -85,8 +110,9 @@ public:
     void mostrarMenu() {
         cout << "---- Menu de Cafeteria ----" << endl;
         for (auto &p : productosDisponibles) {
-            cout << p.id << ". " << p.nombre << " - S/ " << p.precio
-                 << " (" << p.categoria << ")" << endl;
+            cout << p.getId() << ". " << p.getNombre()
+                 << " - S/ " << p.getPrecio()
+                 << " (" << p.getCategoria() << ")" << endl;
         }
     }
 };
@@ -101,18 +127,20 @@ public:
 class Cocina : public Observador {
 public:
     void actualizar(Pedido pedido) override {
-        cout << "[Cocina] Pedido #" << pedido.id
-             << " actualizado con " << pedido.items.size() << " productos." << endl;
+        cout << "[Cocina] Pedido #" << pedido.getId()
+             << " actualizado con " << pedido.getItems().size()
+             << " productos." << endl;
     }
 };
 
 // -------------------- SistemaPedidos --------------------
 class SistemaPedidos {
-public:
+private:
     vector<Pedido> pedidosActivos;
     vector<Cliente> clientesRegistrados;
     vector<Observador*> observadores;
 
+public:
     Pedido& crearPedido(int idPedido) {
         pedidosActivos.push_back(Pedido(idPedido));
         return pedidosActivos.back();
@@ -126,7 +154,8 @@ public:
 
     void finalizarPedido(Pedido &pedido) {
         pedido.marcarComoPagado();
-        cout << "Pedido #" << pedido.id << " finalizado y marcado como PAGADO." << endl;
+        cout << "Pedido #" << pedido.getId()
+             << " finalizado y marcado como PAGADO." << endl;
     }
 
     void agregarObservador(Observador* obs) {
@@ -162,7 +191,7 @@ int main() {
         cout << "2. Agregar producto al pedido\n";
         cout << "3. Finalizar pedido\n";
         cout << "4. Salir\n";
-        cout << "5. Agregar nuevo producto al menú\n"; 
+        cout << "5. Agregar nuevo producto al menú\n";
         cout << "Seleccione una opcion: ";
         cin >> opcion;
 
@@ -188,20 +217,20 @@ int main() {
         }
         case 3:
             sistema.finalizarPedido(pedido);
-            cout << "Total a pagar: S/ " << pedido.total << endl;
+            cout << "Total a pagar: S/ " << pedido.getTotal() << endl;
             salir = true;
             break;
         case 4:
             salir = true;
             break;
-        case 5: {  
+        case 5: {
             int idNuevo;
             string nombreNuevo, categoriaNueva;
             double precioNuevo;
 
             cout << "Ingrese ID del nuevo producto: ";
             cin >> idNuevo;
-            cin.ignore(); 
+            cin.ignore();
             cout << "Nombre del producto: ";
             getline(cin, nombreNuevo);
             cout << "Precio: ";
@@ -221,4 +250,3 @@ int main() {
 
     return 0;
 }
-
