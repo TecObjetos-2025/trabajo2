@@ -21,6 +21,9 @@ private:
 public:
     SistemaPedidos(); // Constructor
 
+    // Mejora de delegacion
+    void mostrarMenu() const;
+
     // Gestion en si
     void registrarCliente(const std::string &nombre, const std::string &telefono);
     Cliente *buscarClientePorId(int id);

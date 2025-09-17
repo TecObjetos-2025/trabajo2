@@ -4,6 +4,12 @@
 // Constructor
 SistemaPedidos::SistemaPedidos() {}
 
+// Mejora de delegacion al mostrar el menu
+void SistemaPedidos::mostrarMenu() const
+{
+    this->menu.mostrarMenu();
+}
+
 void SistemaPedidos::inicializarMenu()
 {
     menu.agregarProducto(Producto(1, "Cafe Americano", 2.50, "Bebidas"));
