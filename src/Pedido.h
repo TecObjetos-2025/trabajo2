@@ -26,6 +26,7 @@ public:
     void agregarItem(const Producto &producto, int cantidad);
     double calcularTotal() const;
     void setEstado(const std::string &nuevoEstado);
+    void marcarComoPagado();
 };
 
 #endif // PEDIDO_H
