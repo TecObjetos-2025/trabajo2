@@ -3,6 +3,9 @@
 #include "models/ItemPedido.h"
 #include <iostream>
 
+// VARIABLE DE CLASE
+const double Pedido::IGV = 0.18;
+
 // Constructor para asociar un cliente a un pedido
 Pedido::Pedido(int id, const Cliente *cliente)
     : id(id), cliente(cliente), estado("EN_PROCESO") {}

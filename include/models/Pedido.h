@@ -17,7 +17,7 @@ private:
     std::string estado;              // Por ejemplo: "EN_PROCESO", "COMPLETADO"
 
 public:
-    static const double IGV = 0.18; // Variable de clase
+    static const double IGV; // Variable de clase
 
     Pedido(int id, const Cliente *cliente);
     ~Pedido(); // <- Nuevo para liberar memoria
