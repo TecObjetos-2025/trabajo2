@@ -120,7 +120,7 @@ void SistemaPedidos::agregarProductoAPedido(Pedido &pedido, int idProducto, int 
     const Producto *producto = menu->getProductoPorId(idProducto);
     if (producto != nullptr)
     {
-        pedido.agregarItem(*producto, cantidad);
+        pedido.agregarItem(producto, cantidad);
         std::cout << "Se agregaron " << cantidad << "x " << producto->getNombre() << " al pedido." << std::endl;
     }
     else
@@ -128,22 +128,35 @@ void SistemaPedidos::agregarProductoAPedido(Pedido &pedido, int idProducto, int 
         std::cout << "Hubo un error: Producto con ID " << idProducto << " no encontrado en el menu." << std::endl;
     }
 }
-void SistemaPedidos::finalizarPedido(Pedido &pedido)
+
+void SistemaPedidos::agregarProducto(Producto *producto)
 {
-    pedido.marcarComoPagado();
-    std::cout << "Pedido #" << pedido.getId()
-              << " finalizado y marcado como PAGADO." << std::endl;
+    if (producto)
+    {
+        productos.push_back(producto);
+    }
+}
+
+void SistemaPedidos::finalizarPedido(Pedido *pedido)
+{
+    if (pedido)
+    {
+        pedido->marcarComoPagado();
+        std::cout << "Pedido #" << pedido->getId()
+                  << " finalizado y marcado como PAGADO." << std::endl;
+        std::cout << "Notificando..." << std::endl;
+        notificarObservadores(pedido);
+    }
 }
 
 // Metodos del Observador
-// Agrega a la cocina, por ejemplo, como nuevo observador
 void SistemaPedidos::agregarObservador(Observador *obs)
 {
     observadores.push_back(obs);
 }
 
 // Notificar a todos los observadores en la lista
-void SistemaPedidos::notificarObservadores(const Pedido &pedido)
+void SistemaPedidos::notificarObservadores(const Pedido *pedido)
 {
     std::cout << "\n[SISTEMA] Notificando a " << observadores.size() << " observador(es)..." << std::endl;
     for (auto *obs : observadores)

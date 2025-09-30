@@ -33,7 +33,7 @@ public:
     Persona *buscarPersonaPorId(int id);
     void mostrarTodasLasPersonas() const;
 
-    // Gestion en si
+    // Gestion antigua en si
     // void registrarCliente(const std::string &nombre, const std::string &telefono);
     // Cliente *buscarClientePorId(int id);
 
@@ -42,11 +42,12 @@ public:
     // Pedido &crearPedido(Cliente &cliente);
     void agregarProductoAPedido(Pedido &pedido, int idProducto, int cantidad);
 
-    void finalizarPedido(Pedido &pedido);
+    void agregarProducto(Producto *producto);
+    void finalizarPedido(Pedido *pedido);
 
     // Métodos del patrón Observer
     void agregarObservador(Observador *obs);
-    void notificarObservadores(const Pedido &pedido);
+    void notificarObservadores(const Pedido *pedido);
 };
 
 #endif // SISTEMAPEDIDOS_H
