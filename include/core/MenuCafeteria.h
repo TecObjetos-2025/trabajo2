@@ -2,7 +2,7 @@
 #define MENUCAFETERIA_H
 
 #include <vector>
-#include "Producto.h"
+#include "models/Producto.h"
 
 class MenuCafeteria
 {

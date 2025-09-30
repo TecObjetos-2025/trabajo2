@@ -1,4 +1,4 @@
-#include "ItemPedido.h"
+#include "models/ItemPedido.h"
 
 ItemPedido::ItemPedido(const Producto &producto, int cantidad)
     : producto(producto), cantidad(cantidad) {}

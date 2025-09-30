@@ -1,4 +1,4 @@
-#include "Producto.h"
+#include "models/Producto.h"
 
 Producto::Producto(int id, const std::string &nombre, double precio, const std::string &categoria)
     : id(id), nombre(nombre), precio(precio), categoria(categoria) {}

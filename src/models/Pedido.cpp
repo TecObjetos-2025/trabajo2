@@ -1,5 +1,5 @@
-#include "Pedido.h"
-#include "Cliente.h"
+#include "models/Pedido.h"
+#include "models/Cliente.h"
 
 // Constructor para asociar un cliente a un pedido
 Pedido::Pedido(int id, const Cliente &cliente)

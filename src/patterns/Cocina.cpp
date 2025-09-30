@@ -1,6 +1,6 @@
-#include "Cocina.h"
-#include "Pedido.h"
-#include "Cliente.h"
+#include "patterns/Cocina.h"
+#include "models/Pedido.h"
+#include "models/Cliente.h"
 
 void Cocina::actualizar(const Pedido &pedido)
 {

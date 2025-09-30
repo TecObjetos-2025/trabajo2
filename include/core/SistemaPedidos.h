@@ -3,10 +3,10 @@
 
 #include <vector>
 #include <string>
-#include "Pedido.h"
-#include "Cliente.h"
+#include "models/Pedido.h"
+#include "models/Cliente.h"
 #include "MenuCafeteria.h"
-#include "Observador.h"
+#include "patterns/Observador.h"
 
 class SistemaPedidos
 {

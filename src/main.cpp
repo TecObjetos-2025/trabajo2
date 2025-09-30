@@ -1,7 +1,7 @@
 #include <iostream>
 #include <limits> // Para limpiar cin
-#include "SistemaPedidos.h"
-#include "Cocina.h"
+#include "core/SistemaPedidos.h"
+#include "patterns/Cocina.h"
 
 // Funciones Auxiliares
 void mostrarMenuPrincipal();
