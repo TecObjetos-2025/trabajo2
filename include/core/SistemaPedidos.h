@@ -3,34 +3,43 @@
 
 #include <vector>
 #include <string>
-#include "models/Pedido.h"
-#include "models/Cliente.h"
-#include "MenuCafeteria.h"
-#include "patterns/Observador.h"
+
+class Persona;
+class Pedido;
+class Producto;
+class Observador;
+class MenuCafeteria;
 
 class SistemaPedidos
 {
 private:
-    MenuCafeteria menu;
-    std::vector<Cliente> clientes;
-    std::vector<Pedido> pedidos;
+    MenuCafeteria *menu;
+    std::vector<Persona *> personas;
+    std::vector<Pedido *> pedidos;
     std::vector<Observador *> observadores;
-    int proximoIdCliente = 1;
-    int proximoIdPedido = 1;
+    std::vector<Producto *> productos;
+
+    int proximoIdPersona = 1;
 
 public:
     SistemaPedidos(); // Constructor
 
+    ~SistemaPedidos(); // <- Nuevo para manejo de memoria al usar listas de punteros
+
     // Mejora de delegacion
     void mostrarMenu() const;
 
+    void registrarPersona(Persona *persona);
+    Persona *buscarPersonaPorId(int id);
+    void mostrarTodasLasPersonas() const;
+
     // Gestion en si
-    void registrarCliente(const std::string &nombre, const std::string &telefono);
-    Cliente *buscarClientePorId(int id);
+    // void registrarCliente(const std::string &nombre, const std::string &telefono);
+    // Cliente *buscarClientePorId(int id);
 
     void inicializarMenu(); // Para agregar productos de ejemplo
 
-    Pedido &crearPedido(Cliente &cliente);
+    // Pedido &crearPedido(Cliente &cliente);
     void agregarProductoAPedido(Pedido &pedido, int idProducto, int cantidad);
 
     void finalizarPedido(Pedido &pedido);
