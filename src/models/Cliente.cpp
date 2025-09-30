@@ -1,12 +1,19 @@
 #include "models/Cliente.h"
+#include <iostream>
 
 // Constructor
 Cliente::Cliente(int id, const std::string &nombre, const std::string &telefono)
-    : id(id), nombre(nombre), telefono(telefono) {}
+    : Persona(id, nombre), telefono(telefono) {}
 
-// Getters
-int Cliente::getId() const
+std::string Cliente::getTelefono() const
 {
-    return id;
+    return telefono;
 }
-std::string Cliente::getNombre() const { return nombre; }
+
+void Cliente::mostrarInfo() const
+{
+    std::cout << "--- Ficha de Cliente ---" << std::endl;
+    std::cout << "ID: " << id << std::endl;
+    std::cout << "Nombre: " << nombre << std::endl;
+    std::cout << "Telefono: " << telefono << std::endl;
+}

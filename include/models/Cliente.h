@@ -1,20 +1,20 @@
 #ifndef CLIENTE_H
 #define CLIENTE_H
 
+#include "models/Persona.h"
 #include <string>
 
-class Cliente
+class Cliente : public Persona
 {
 private:
-    int id;
-    std::string nombre;
     std::string telefono;
 
 public:
     Cliente(int id, const std::string &nombre, const std::string &telefono);
 
-    int getId() const;
-    std::string getNombre() const;
+    std::string getTelefono() const;
+
+    void mostrarInfo() const override;
 };
 
 #endif // CLIENTE_H
