@@ -1,127 +1,75 @@
 #include <iostream>
 #include <limits> // Para limpiar cin
 #include "core/SistemaPedidos.h"
-#include "patterns/Cocina.h"
-
-// Funciones Auxiliares
-void mostrarMenuPrincipal();
-void registrarNuevoCliente(SistemaPedidos &sistema);
-void crearNuevoPedido(SistemaPedidos &sistema);
+#include "models/Persona.h"
+#include "models/Cliente.h"
+#include "models/Empleado.h"
+#include "models/Cocinero.h"
+#include "models/Administrador.h"
+#include "models/Producto.h"
+#include "models/Pedido.h"
 
 int main()
 {
+    std::cout << "--- Iniciando Sistema de Cafeteria (v2.0) ---" << std::endl;
+
+    // Config
     SistemaPedidos sistema;
-    Cocina cocina;
 
-    sistema.inicializarMenu();
-    sistema.agregarObservador(&cocina);
+    // Agregar productos
+    sistema.agregarProducto(new Producto(101, "Cafe Americano", 5.50, "Bebidas"));
+    sistema.agregarProducto(new Producto(102, "Pan con Chicharron", 7.00, "Desayuno"));
+    sistema.agregarProducto(new Producto(103, "Jugo de Papaya", 6.00, "Bebidas"));
 
-    std::cout << "Bienvenido al Sistema de Gestion de la Cafeteria!" << std::endl;
+    // Crear diferentes Personas
+    Persona *cliente1 = new Cliente(1, "Carlos Juarez", "987654321");
+    Persona *cocinero1 = new Cocinero(2, "Ana Guevera", "EMP-001");
+    Persona *admin1 = new Administrador(3, "Juan Castro", "EMP-002");
 
-    int opcion = 0;
-    while (opcion != 4)
+    sistema.registrarPersona(cliente1);
+    sistema.registrarPersona(cocinero1);
+    sistema.registrarPersona(admin1);
+
+    Cocinero *ptrCocinero = dynamic_cast<Cocinero *>(cocinero1);
+    if (ptrCocinero)
     {
-        mostrarMenuPrincipal();
-        std::cin >> opcion;
-
-        // Validad la entrada
-        if (std::cin.fail())
-        {
-            std::cout << "Ops! Pro favor, ingresa un numero valido!" << std::endl;
-            std::cin.clear();
-            // Para ignorar la mala entrada (https://www.geeksforgeeks.org/cpp/cin-ignore-function-in-cpp/)
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            continue; // Regresar
-        }
-
-        switch (opcion)
-        {
-        case 1:
-            sistema.mostrarMenu();
-            break;
-        case 2:
-            registrarNuevoCliente(sistema);
-            break;
-        case 3:
-            crearNuevoPedido(sistema);
-            break;
-        case 4:
-            std::cout << "Saliendo del sistema. Bye!!" << std::endl;
-            break;
-        default:
-            std::cout << "Ops! La opcion no es valida. Intenta de nuevo!" << std::endl;
-            break;
-        }
-        std::cout << std::endl;
+        sistema.agregarObservador(ptrCocinero);
     }
+
+    Administrador *ptrAdmin = dynamic_cast<Administrador *>(admin1);
+    if (ptrAdmin)
+    {
+        sistema.agregarObservador(ptrAdmin);
+    }
+
+    sistema.mostrarTodasLasPersonas();
+
+    // -- SIMULAR PEDIDO
+    std::cout << "\n --- SIMULACION --- " << std::endl;
+
+    Cliente *ptrCliente = dynamic_cast<Cliente *>(cliente1);
+    if (ptrCliente)
+    {
+        // Iniciar/Crear el pedido
+        Pedido *nuevoPedido = new Pedido(1001, ptrCliente);
+
+        // El cliente pide productos
+        nuevoPedido->agregarItem(new Producto(101, "Cafe Americano", 5.50, "Bebidas"), 2);
+        nuevoPedido->agregarItem(new Producto(102, "Pan con Chicharron", 7.00, "Desayuno"), 1);
+
+        // Finalizar pedido
+        sistema.finalizarPedido(nuevoPedido);
+
+        delete nuevoPedido;
+    }
+
+    // Verificar Observadores
+    if (ptrAdmin)
+    {
+        ptrAdmin->mostrarEstadisticasVentas();
+    }
+
+    std::cout << "\n--- FIN ---" << std::endl;
 
     return 0;
-}
-
-// Funciones auxiliares
-void mostrarMenuPrincipal()
-{
-    std::cout << "----------- MENU PRINCIPAL -----------" << std::endl;
-    std::cout << "1. Mostrar Menu de la Cafeteria" << std::endl;
-    std::cout << "2. Registrar Nuevo Cliente" << std::endl;
-    std::cout << "3. Crear Nuevo Pedido" << std::endl;
-    std::cout << "4. Salir" << std::endl;
-    std::cout << "------------------------------------" << std::endl;
-    std::cout << "Seleccione una opcion: ";
-}
-
-void registrarNuevoCliente(SistemaPedidos &sistema)
-{
-    std::string nombre, telefono;
-    std::cout << "Ingrese el nombre del cliente: ";
-    std::cin.ignore(); // Limpiar el buffer
-    std::getline(std::cin, nombre);
-    std::cout << "Ingrese el telefono del cliente: ";
-    std::getline(std::cin, telefono);
-    sistema.registrarCliente(nombre, telefono);
-}
-
-void crearNuevoPedido(SistemaPedidos &sistema)
-{
-    int idCliente;
-    std::cout << "Ingrese el ID del cliente para el pedido: ";
-    std::cin >> idCliente;
-
-    Cliente *cliente = sistema.buscarClientePorId(idCliente);
-    if (cliente == nullptr)
-    {
-        std::cout << "Cliente con ID " << idCliente << " no encontrado." << std::endl;
-        return;
-    }
-
-    Pedido &nuevoPedido = sistema.crearPedido(*cliente);
-    std::cout << "Pedido #" << nuevoPedido.getId() << " creado para el cliente " << cliente->getNombre() << "." << std::endl;
-
-    int idProducto = 0;
-    while (idProducto != -1)
-    {
-        sistema.mostrarMenu();
-        std::cout << "Ingrese el ID del producto para agregar (o -1 para finalizar): ";
-        std::cin >> idProducto;
-
-        if (idProducto != -1)
-        {
-            int cantidad;
-            std::cout << "Ingrese la cantidad: ";
-            std::cin >> cantidad;
-            if (cantidad > 0)
-            {
-                sistema.agregarProductoAPedido(nuevoPedido, idProducto, cantidad);
-            }
-            else
-            {
-                std::cout << "La cantidad debe ser mayor a cero." << std::endl;
-            }
-        }
-    }
-
-    // Al finalizar el pedido, se notifica a los observadores (la cocina)
-    std::cout << "Finalizando pedido..." << std::endl;
-    nuevoPedido.setEstado("COMPLETADO");
-    sistema.notificarObservadores(nuevoPedido);
 }
