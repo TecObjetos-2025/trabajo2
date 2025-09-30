@@ -1,25 +1,36 @@
 #include "models/Pedido.h"
 #include "models/Cliente.h"
+#include "models/ItemPedido.h"
+#include <iostream>
 
 // Constructor para asociar un cliente a un pedido
-Pedido::Pedido(int id, const Cliente &cliente)
+Pedido::Pedido(int id, const Cliente *cliente)
     : id(id), cliente(cliente), estado("EN_PROCESO") {}
 
+// Nuevo! Destructor para liberar memoria
+Pedido::~Pedido()
+{
+    for (ItemPedido *item : items)
+    {
+        delete item;
+    }
+}
+
 // Agregar items
-void Pedido::agregarItem(const Producto &producto, int cantidad)
+void Pedido::agregarItem(const Producto *producto, int cantidad)
 {
     // Añadir al final (se crea automaticamente el objeto)
-    items.emplace_back(producto, cantidad);
+    items.push_back(new ItemPedido(producto, cantidad));
 }
 
 double Pedido::calcularTotal() const
 {
-    double total = 0.0;
+    double subtotal = 0.0;
     for (const auto &item : items)
     {
-        total += item.getSubtotal();
+        subtotal += item->getSubtotal();
     }
-    return total;
+    return subtotal * (1 + IGV);
 }
 
 // Getters
@@ -28,12 +39,12 @@ int Pedido::getId() const
     return id;
 }
 
-const Cliente &Pedido::getCliente() const
+const Cliente *Pedido::getCliente() const
 {
     return cliente;
 }
 
-const std::vector<ItemPedido> &Pedido::getItems() const
+const std::vector<ItemPedido *> &Pedido::getItems() const
 {
     return items;
 }

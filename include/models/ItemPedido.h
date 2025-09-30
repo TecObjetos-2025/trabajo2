@@ -6,13 +6,13 @@
 class ItemPedido
 {
 private:
-    const Producto &producto; // Usamos una referencia al producto del menú
+    const Producto *producto; // <- Cambiado a puntero
     int cantidad;
 
 public:
-    ItemPedido(const Producto &producto, int cantidad);
+    ItemPedido(const Producto *producto, int cantidad);
 
-    const Producto &getProducto() const;
+    const Producto *getProducto() const;
     int getCantidad() const;
     double getSubtotal() const; // Calcula precio * cantidad
 };

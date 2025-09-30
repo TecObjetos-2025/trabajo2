@@ -2,28 +2,32 @@
 #define PEDIDO_H
 
 #include <vector>
-#include "ItemPedido.h"
+#include <string>
 
-// Buena practica cuando se usa punteros
 class Cliente;
+class ItemPedido;
+class Producto;
 
 class Pedido
 {
 private:
     int id;
-    const Cliente &cliente; // Asociado a un cliente
-    std::vector<ItemPedido> items;
-    std::string estado; // Por ejemplo: "EN_PROCESO", "COMPLETADO"
+    const Cliente *cliente;          // Asociado a un cliente
+    std::vector<ItemPedido *> items; // <- Nuevo: Vector de punteros
+    std::string estado;              // Por ejemplo: "EN_PROCESO", "COMPLETADO"
 
 public:
-    Pedido(int id, const Cliente &cliente);
+    static const double IGV = 0.18; // Variable de clase
+
+    Pedido(int id, const Cliente *cliente);
+    ~Pedido(); // <- Nuevo para liberar memoria
 
     int getId() const;
-    const Cliente &getCliente() const;
-    const std::vector<ItemPedido> &getItems() const;
+    const Cliente *getCliente() const; // Devuelve el puntero ahora
+    const std::vector<ItemPedido *> &getItems() const;
     std::string getEstado() const;
 
-    void agregarItem(const Producto &producto, int cantidad);
+    void agregarItem(const Producto *producto, int cantidad);
     double calcularTotal() const;
     void setEstado(const std::string &nuevoEstado);
     void marcarComoPagado();

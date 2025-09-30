@@ -1,11 +1,16 @@
 #include "models/ItemPedido.h"
 
-ItemPedido::ItemPedido(const Producto &producto, int cantidad)
+// Ahora se recibe puntero
+ItemPedido::ItemPedido(const Producto *producto, int cantidad)
     : producto(producto), cantidad(cantidad) {}
 
 double ItemPedido::getSubtotal() const
 {
-    return producto.getPrecio() * cantidad;
+    if (producto) // Verificacion por puntero
+    {
+        return producto->getPrecio() * cantidad;
+    }
+    return 0.0;
 }
 
 // Getters
@@ -15,4 +20,4 @@ int ItemPedido::getCantidad() const
 }
 
 // Devolver la referencia del Producto
-const Producto &ItemPedido::getProducto() const { return producto; }
+const Producto *ItemPedido::getProducto() const { return producto; }
