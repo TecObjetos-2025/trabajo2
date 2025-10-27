@@ -55,6 +55,8 @@ public:
      * @brief Metodo para actuar como "Consumidor de Pedidos": procesar el siguiente pedido en la cola
      */
     Pedido *procesarSiguientePedido(); // <- NUEVO
+
+    void mostrarPedidosEnEspera() const; // <- NUEVO
 };
 
 #endif // SISTEMAPEDIDOS_H

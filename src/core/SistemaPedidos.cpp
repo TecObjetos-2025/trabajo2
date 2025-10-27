@@ -197,3 +197,14 @@ Pedido *SistemaPedidos::procesarSiguientePedido()
         return nullptr;
     }
 }
+
+/**
+ * @brief Mostrar el estado actual de la cola de pedidos en espera
+ */
+void SistemaPedidos::mostrarPedidosEnEspera() const
+{
+    std::cout << "\n --- ESTADO ACTUAL DE LA COLA DE PEDIDOS EN ESPERA --- " << std::endl;
+    pedidos_en_espera.mostrar();
+    std::cout << "-----------------------------------------------------\n"
+              << std::endl;
+}
