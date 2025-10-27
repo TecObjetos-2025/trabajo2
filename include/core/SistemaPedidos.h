@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include "Cola.h"
 
 class Persona;
 class Pedido;
@@ -15,7 +16,8 @@ class SistemaPedidos
 private:
     MenuCafeteria *menu;
     std::vector<Persona *> personas;
-    std::vector<Pedido *> pedidos;
+    // std::vector<Pedido *> pedidos;
+    Cola<Pedido *> pedidos_en_espera; // <- Cambio a Cola de punteros (FIFO)
     std::vector<Observador *> observadores;
     std::vector<Producto *> productos;
 
@@ -24,7 +26,7 @@ private:
 public:
     SistemaPedidos(); // Constructor
 
-    ~SistemaPedidos(); // <- Nuevo para manejo de memoria al usar listas de punteros
+    ~SistemaPedidos(); // <- Manejo de memoria en el destructor
 
     // Mejora de delegacion
     void mostrarMenu() const;
@@ -33,21 +35,26 @@ public:
     Persona *buscarPersonaPorId(int id);
     void mostrarTodasLasPersonas() const;
 
-    // Gestion antigua en si
-    // void registrarCliente(const std::string &nombre, const std::string &telefono);
-    // Cliente *buscarClientePorId(int id);
-
     void inicializarMenu(); // Para agregar productos de ejemplo
 
     // Pedido &crearPedido(Cliente &cliente);
     void agregarProductoAPedido(Pedido &pedido, int idProducto, int cantidad);
 
     void agregarProducto(Producto *producto);
+
+    /**
+     * @brief Actuar como "Procesador de Pedidos": agregar un nuevo pedido a la cola
+     */
     void finalizarPedido(Pedido *pedido);
 
     // Métodos del patrón Observer
     void agregarObservador(Observador *obs);
     void notificarObservadores(const Pedido *pedido);
+
+    /**
+     * @brief Metodo para actuar como "Consumidor de Pedidos": procesar el siguiente pedido en la cola
+     */
+    Pedido *procesarSiguientePedido(); // <- NUEVO
 };
 
 #endif // SISTEMAPEDIDOS_H
