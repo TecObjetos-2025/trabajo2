@@ -105,7 +105,7 @@ public:
 
         while (actual != nullptr)
         {
-            std::cout << "[" actual->valor << "] -> ";
+            std::cout << "[" << actual->valor << "] -> ";
             actual = actual->siguiente;
         }
         std::cout << "FIN" << std::endl;
