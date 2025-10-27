@@ -5,6 +5,7 @@
 #include "patterns/Observador.h"
 #include "core/MenuCafeteria.h"
 #include <iostream>
+#include <stdexcept> // Capturar excepciones en la Cola
 
 // Constructor
 SistemaPedidos::SistemaPedidos()
@@ -23,15 +24,18 @@ SistemaPedidos::~SistemaPedidos()
         delete p;
     }
 
-    // De productos, pedidos, etc
+    // De productos
     for (Producto *p : productos)
     {
         delete p;
     }
 
-    for (Pedido *p : pedidos)
+    // Vaciar la cola de pedidos y liberar memoria
+    std::cout << "Liberando pedidos en espera..." << std::endl;
+    while (!pedidos_en_espera.estaVacia())
     {
-        delete p;
+        Pedido *pedido = pedidos_en_espera.desencolar();
+        delete pedido;
     }
 
     delete menu;
@@ -144,6 +148,11 @@ void SistemaPedidos::finalizarPedido(Pedido *pedido)
         pedido->marcarComoPagado();
         std::cout << "Pedido #" << pedido->getId()
                   << " finalizado y marcado como PAGADO." << std::endl;
+
+        // Agregar a la cola de pedidos en espera (NUEVO)
+        std::cout << "[SISTEMA] Pedido #" << pedido->getId() << " agregado a la cola de pedidos en espera." << std::endl;
+        pedidos_en_espera.encolar(pedido);
+
         std::cout << "Notificando..." << std::endl;
         notificarObservadores(pedido);
     }
@@ -162,5 +171,29 @@ void SistemaPedidos::notificarObservadores(const Pedido *pedido)
     for (auto *obs : observadores)
     {
         obs->actualizar(pedido);
+    }
+}
+
+// Implementacion Practica 5: Procesar el siguiente pedido en la cola
+
+/**
+ * @brief Implementacion del "Consumidor" (Cocinero).
+ * Desencolar el siguiente pedido en la cola y devolverlo para su procesamiento.
+ */
+Pedido *SistemaPedidos::procesarSiguientePedido()
+{
+    std::cout << "\n[COCINERO] Buscando nuevo pedido en la cola..." << std::endl;
+    try
+    {
+        Pedido *pedidoProcesado = pedidos_en_espera.desencolar();
+
+        std::cout << "[COCINERO] ...Pedido #" << pedidoProcesado->getId() << " listo para ser procesado." << std::endl;
+
+        return pedidoProcesado;
+    }
+    catch (const std::runtime_error &e)
+    {
+        std::cout << "[COCINERO] No hay pedidos en espera para procesar." << std::endl;
+        return nullptr;
     }
 }
