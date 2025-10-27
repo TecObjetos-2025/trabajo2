@@ -49,7 +49,17 @@ public:
      */
     void encolar(T valor)
     {
-        // TODO: Implementar este metodo
+        Nodo<T> *nuevoNodo = new Nodo<T>(valor);
+        if (estaVacia())
+        {
+            frente = nuevoNodo;
+            final = nuevoNodo;
+        }
+        else
+        {
+            final->siguiente = nuevoNodo;
+            final = nuevoNodo;
+        }
     }
 
     /**
@@ -57,14 +67,48 @@ public:
      */
     T desencolar()
     {
-        // TODO: Implementar este metodo
-
         if (estaVacia())
         {
             throw std::runtime_error("Cola vacía. No se puede desencolar.");
         }
-        T valor_temporal = frente->valor;
-        return valor_temporal;
+        // Copiar el valor del frente
+        T valorARetornar = frente->valor;
+
+        Nodo<T> *nodoAEliminar = frente;
+
+        frente = frente->siguiente;
+
+        if (frente == nullptr)
+        {
+            final = nullptr; // La cola está vacía después de desencolar
+        }
+
+        delete nodoAEliminar;
+
+        return valorARetornar;
+    }
+
+    /**
+     * @brief Mostrar todos los elementos de la cola (para depuración)
+     */
+    void mostrar() const
+    {
+        if (estaVacia())
+        {
+            std::cout << "Cola vacía." << std::endl;
+            return;
+        }
+
+        // Puntero temporal para recorrer la cola
+        Nodo<T> *actual = frente;
+        std::cout << "Elementos en la cola (FRENTE): ";
+
+        while (actual != nullptr)
+        {
+            std::cout << "[" actual->valor << "] -> ";
+            actual = actual->siguiente;
+        }
+        std::cout << "FIN" << std::endl;
     }
 
     /**
@@ -72,7 +116,6 @@ public:
      */
     T obtenerFrente() const
     {
-        // TODO: Implementar este metodo
         if (estaVacia())
         {
             throw std::runtime_error("Cola vacía. No se puede obtener el frente.");
