@@ -1,9 +1,10 @@
 #include "models/Cocinero.h"
 #include "models/Pedido.h"
+#include "core/SistemaPedidos.h"
 #include <iostream>
 
-Cocinero::Cocinero(int id, const std::string &nombre, const std::string &codigoEmpleado)
-    : Empleado(id, nombre, codigoEmpleado) {}
+Cocinero::Cocinero(int id, const std::string &nombre, const std::string &codigoEmpleado, SistemaPedidos *sistema)
+    : Empleado(id, nombre, codigoEmpleado), sistema(sistema) {}
 
 void Cocinero::mostrarInfo() const
 {
@@ -14,7 +15,26 @@ void Cocinero::mostrarInfo() const
 
 void Cocinero::actualizar(const Pedido *pedido)
 {
+    // Util para la UI mas adelante
     std::cout << "\n================ AVISO PARA COCINA ================" << std::endl;
     std::cout << "¡Nuevo pedido #" << pedido->getId() << " para preparar!" << std::endl;
     std::cout << "===================================================" << std::endl;
+}
+
+// Nueva implementacion
+void Cocinero::cocinarSiguientePedido()
+{
+    // Cocinero como "Consumidor de Pedidos"
+    Pedido *pedido = this->sistema->procesarSiguientePedido();
+
+    // Responsabilidad de procesar el pedido
+    if (pedido != nullptr)
+    {
+        std::cout << "[COCINERO] " << this->getNombre() << " cocinando Pedido #" << pedido->getId() << "..." << std::endl;
+        // Simular tiempo de cocina
+        // std::this_thread::sleep_for(std::chrono::seconds(2));
+        pedido->setEstado("COMPLETADO");
+        std::cout << "[COCINERO] Pedido #" << pedido->getId() << " listo!" << std::endl;
+        delete pedido; // Liberar memoria despues de procesar
+    }
 }
