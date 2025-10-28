@@ -11,7 +11,7 @@
 
 int main()
 {
-    std::cout << "--- Iniciando Sistema de Cafeteria (v2.0) ---" << std::endl;
+    std::cout << "--- Iniciando Sistema de Cafeteria (v2.0 + cambios practica 5) ---" << std::endl;
 
     // Config
     SistemaPedidos sistema;
@@ -23,47 +23,92 @@ int main()
 
     // Crear diferentes Personas
     Persona *cliente1 = new Cliente(1, "Carlos Juarez", "987654321");
-    Persona *cocinero1 = new Cocinero(2, "Ana Guevera", "EMP-001");
+    Persona *cocinero1 = new Cocinero(2, "Ana Guevara", "EMP-001");
     Persona *admin1 = new Administrador(3, "Juan Castro", "EMP-002");
 
     sistema.registrarPersona(cliente1);
     sistema.registrarPersona(cocinero1);
     sistema.registrarPersona(admin1);
 
+    // Configurar Observadores
+
     Cocinero *ptrCocinero = dynamic_cast<Cocinero *>(cocinero1);
     if (ptrCocinero)
-    {
         sistema.agregarObservador(ptrCocinero);
-    }
 
     Administrador *ptrAdmin = dynamic_cast<Administrador *>(admin1);
     if (ptrAdmin)
-    {
         sistema.agregarObservador(ptrAdmin);
-    }
 
-    sistema.mostrarTodasLasPersonas();
+    // sistema.mostrarTodasLasPersonas();
 
-    // -- SIMULAR PEDIDO
-    std::cout << "\n --- SIMULACION --- " << std::endl;
+    // -- SIMULACION PRACTICA 5 --
+    std::cout << "\n --- SIMULACION FIFO (PRACTICA 5) --- " << std::endl;
 
     Cliente *ptrCliente = dynamic_cast<Cliente *>(cliente1);
     if (ptrCliente)
     {
-        // Iniciar/Crear el pedido
-        Pedido *nuevoPedido = new Pedido(1001, ptrCliente);
+        // 1. Cajero crear y encola pedidos
+        std::cout << "\n[CAJERO] Registrando 3 pedidos..." << std::endl;
 
-        // El cliente pide productos
-        nuevoPedido->agregarItem(new Producto(101, "Cafe Americano", 5.50, "Bebidas"), 2);
-        nuevoPedido->agregarItem(new Producto(102, "Pan con Chicharron", 7.00, "Desayuno"), 1);
+        // Pedido 1 (P1)
+        Pedido *pedido1 = new Pedido(1001, ptrCliente);
+        //  El cliente pide productos
+        pedido1->agregarItem(new Producto(101, "Cafe Americano", 5.50, "Bebidas"), 2);
+        sistema.finalizarPedido(pedido1); // P2 se encola
 
-        // Finalizar pedido
-        sistema.finalizarPedido(nuevoPedido);
+        // Pedido 2 (P2)
+        Pedido *pedido2 = new Pedido(1002, ptrCliente);
+        pedido2->agregarItem(new Producto(102, "Pan con Chicharron", 7.00, "Desayuno"), 1);
+        sistema.finalizarPedido(pedido2); // P2 se encola
 
-        delete nuevoPedido;
+        // Pedido 3 (P3)
+        Pedido *pedido3 = new Pedido(1003, ptrCliente);
+        pedido3->agregarItem(new Producto(103, "Jugo de Papaya", 6.00, "Bebidas"), 1);
+        sistema.finalizarPedido(pedido3); // P3 se encola
+
+        // 2. Mostrar cola de pedidos en espera
+        // (Esto debe mostrar las direcciones de memoria de P1, P2, P3 en orden)
+        sistema.mostrarPedidosEnEspera();
+
+        // 3. Cocinero procesa los pedidos en orden FIFO
+        std::cout << "\n[COCINERO] Procesando pedidos en orden FIFO..." << std::endl;
+
+        // Procesar Pedido 1
+        Pedido *pProcesado1 = sistema.procesarSiguientePedido();
+        if (pProcesado1)
+        {
+            std::cout << "[MAIN] Pedido #" << pProcesado1->getId() << " procesado." << std::endl;
+            delete pProcesado1; // Liberar memoria despues de procesar
+        }
+
+        // Procesar Pedido 2
+        Pedido *pProcesado2 = sistema.procesarSiguientePedido();
+        if (pProcesado2)
+        {
+            std::cout << "[MAIN] Pedido #" << pProcesado2->getId() << " procesado." << std::endl;
+            delete pProcesado2; // Liberar memoria despues de procesar
+        }
+
+        // Verificar el estado de la cola (Solo queda el Pedido 3)
+        std::cout << "\n[CAJERO] (Verificando estado de la cola antes del ultimo pedido...)" << std::endl;
+        sistema.mostrarPedidosEnEspera();
+
+        // Procesar Pedido 3
+        Pedido *pProcesado3 = sistema.procesarSiguientePedido();
+        if (pProcesado3)
+        {
+            std::cout << "[MAIN] Pedido #" << pProcesado3->getId() << " procesado." << std::endl;
+            delete pProcesado3; // Liberar memoria despues de procesar
+        }
+
+        // 4. Verificar que la cola este vacia
+        std::cout << "\n[MAIN] Verificando que la cola este vacia..." << std::endl;
+        sistema.mostrarPedidosEnEspera();  // Debe mostrar [COLA VACIA]
+        sistema.procesarSiguientePedido(); // Debe mostrar error "No hay pedidos"
     }
 
-    // Verificar Observadores
+    // Verificar Observadores (Stats de Admin)
     if (ptrAdmin)
     {
         ptrAdmin->mostrarEstadisticasVentas();

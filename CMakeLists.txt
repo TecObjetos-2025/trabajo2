@@ -15,6 +15,6 @@ include_directories(include)
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 # Definir el nombre del programa ejecutable y los archivos fuente que necesita para compilarse.
-add_executable(cafeteria ${SOURCES})
+add_executable(cafeteria.out ${SOURCES})
 
 message(STATUS "Configuración de CMake para CafeteriaManager completada.")
