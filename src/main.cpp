@@ -23,7 +23,7 @@ int main()
 
     // Crear diferentes Personas
     Persona *cliente1 = new Cliente(1, "Carlos Juarez", "987654321");
-    Persona *cocinero1 = new Cocinero(2, "Ana Guevara", "EMP-001");
+    Persona *cocinero1 = new Cocinero(2, "Ana Guevara", "EMP-001", &sistema);
     Persona *admin1 = new Administrador(3, "Juan Castro", "EMP-002");
 
     sistema.registrarPersona(cliente1);
@@ -72,35 +72,16 @@ int main()
         sistema.mostrarPedidosEnEspera();
 
         // 3. Cocinero procesa los pedidos en orden FIFO
-        std::cout << "\n[COCINERO] Procesando pedidos en orden FIFO..." << std::endl;
+        std::cout << "\n[MAIN] Dando orden al cocinero de trabajar con la FIFO..." << std::endl;
 
-        // Procesar Pedido 1
-        Pedido *pProcesado1 = sistema.procesarSiguientePedido();
-        if (pProcesado1)
-        {
-            std::cout << "[MAIN] Pedido #" << pProcesado1->getId() << " procesado." << std::endl;
-            delete pProcesado1; // Liberar memoria despues de procesar
-        }
-
-        // Procesar Pedido 2
-        Pedido *pProcesado2 = sistema.procesarSiguientePedido();
-        if (pProcesado2)
-        {
-            std::cout << "[MAIN] Pedido #" << pProcesado2->getId() << " procesado." << std::endl;
-            delete pProcesado2; // Liberar memoria despues de procesar
-        }
+        ptrCocinero->cocinarSiguientePedido(); // Procesa Pedido 1
+        ptrCocinero->cocinarSiguientePedido(); // Procesa Pedido 2
 
         // Verificar el estado de la cola (Solo queda el Pedido 3)
         std::cout << "\n[CAJERO] (Verificando estado de la cola antes del ultimo pedido...)" << std::endl;
         sistema.mostrarPedidosEnEspera();
 
-        // Procesar Pedido 3
-        Pedido *pProcesado3 = sistema.procesarSiguientePedido();
-        if (pProcesado3)
-        {
-            std::cout << "[MAIN] Pedido #" << pProcesado3->getId() << " procesado." << std::endl;
-            delete pProcesado3; // Liberar memoria despues de procesar
-        }
+        ptrCocinero->cocinarSiguientePedido(); // Procesa Pedido 3
 
         // 4. Verificar que la cola este vacia
         std::cout << "\n[MAIN] Verificando que la cola este vacia..." << std::endl;
