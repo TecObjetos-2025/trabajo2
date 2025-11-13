@@ -28,7 +28,7 @@ public:
      */
     virtual void finalizarPedido(const std::string &cliente,
                                  const std::vector<ItemPedidoCrear> &items,
-                                 const std::vector<std::string> &descuentos) = 0;
+                                 const std::string &id_descuentos) = 0;
 
     // --- Funciones "Vista Cocina"
     /**
