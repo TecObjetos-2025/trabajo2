@@ -18,3 +18,6 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 add_executable(cafeteria.out ${SOURCES})
 
 message(STATUS "Configuración de CMake para CafeteriaManager completada.")
+
+# --- FASE 2: UI
+add_subdirectory(ui-qt)
