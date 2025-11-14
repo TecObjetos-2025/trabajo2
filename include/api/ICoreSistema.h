@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include "IObservadorCore.h"
 #include "ApiDTOs.h"
