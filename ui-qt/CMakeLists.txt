@@ -21,6 +21,8 @@ set(PROJECT_SOURCES
     src/mainwindow.ui
     src/CoreFalso.h
     src/CoreFalso.cpp
+    src/CoreQtAdapter.h
+    src/CoreQtAdapter.cpp
 )
 
 add_executable(CafeteriaApp
