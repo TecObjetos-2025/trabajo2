@@ -56,7 +56,7 @@ void CoreFalso::finalizarPedido(const std::string &cliente,
 // Funciones "Vista Cocina"
 std::vector<InfoPedido> CoreFalso::getPedidosEnCola()
 {
-    std::cout << "[CoreFalso] getPedidosEnCola llamado. Devolviendo 1 pedido fake" << std::endl;
+    std::cout << "[CoreFalso] getPedidosEnCola llamado. Devolviendo 2 pedidos fake" << std::endl;
 
     // Datos fake
     InfoPedido pedido1;
