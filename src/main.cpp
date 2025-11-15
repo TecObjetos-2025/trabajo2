@@ -34,11 +34,11 @@ int main()
 
     Cocinero *ptrCocinero = dynamic_cast<Cocinero *>(cocinero1);
     if (ptrCocinero)
-        sistema.agregarObservador(ptrCocinero);
+        sistema.registrarObservador(ptrCocinero);
 
     Administrador *ptrAdmin = dynamic_cast<Administrador *>(admin1);
     if (ptrAdmin)
-        sistema.agregarObservador(ptrAdmin);
+        sistema.registrarObservador(ptrAdmin);
 
     // sistema.mostrarTodasLasPersonas();
 
@@ -94,6 +94,42 @@ int main()
     {
         ptrAdmin->mostrarEstadisticasVentas();
     }
+
+    // --- PRUEBAS DE LA API/FACHADA ---
+    std::cout << "\n--- PRUEBAS DE LA API/FACHADA ---" << std::endl;
+
+    // Mostrar menú limpio (DTO)
+    std::vector<InfoProducto> menuDTO = sistema.getMenu();
+    std::cout << "\n[API] Menu disponible:" << std::endl;
+    for (const auto &prod : menuDTO)
+    {
+        std::cout << "  - " << prod.id << ": " << prod.nombre << " ($" << prod.precio << ")" << std::endl;
+    }
+
+    // Mostrar descuentos disponibles
+    std::vector<InfoDescuento> descuentosDTO = sistema.getDescuentosDisponibles();
+    std::cout << "\n[API] Descuentos disponibles:" << std::endl;
+    for (const auto &desc : descuentosDTO)
+    {
+        std::cout << "  - " << desc.id_descuento << ": " << desc.descripcion << std::endl;
+    }
+    if (descuentosDTO.empty())
+        std::cout << "  (Ninguno)" << std::endl;
+
+    // Mostrar pedidos en cola (stub/documentado)
+    std::vector<InfoPedido> pedidosDTO = sistema.getPedidosEnCola();
+    std::cout << "\n[API] Pedidos en cola:" << std::endl;
+    for (const auto &pedido : pedidosDTO)
+    {
+        std::cout << "  - Pedido #" << pedido.id_pedido << " de " << pedido.cliente << " (" << pedido.estado << ")" << std::endl;
+        for (const auto &item : pedido.items)
+        {
+            std::cout << "      * " << item.cantidad << "x " << item.nombreProducto << " ($" << item.precioUnitario << ")" << std::endl;
+        }
+        std::cout << "    Total: $" << pedido.total_final << std::endl;
+    }
+    if (pedidosDTO.empty())
+        std::cout << "  (Ninguno o pendiente de refactorización de Cola)" << std::endl;
 
     std::cout << "\n--- FIN ---" << std::endl;
 
