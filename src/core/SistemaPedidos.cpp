@@ -1,6 +1,19 @@
+// Función auxiliar para convertir ItemPedido a ItemPedidoInfo
+static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
+{
+    ItemPedidoInfo dto;
+    if (item && item->getProducto())
+    {
+        dto.nombreProducto = item->getProducto()->getNombre();
+        dto.cantidad = item->getCantidad();
+        dto.precioUnitario = item->getProducto()->getPrecio();
+    }
+    return dto;
+}
 #include "core/SistemaPedidos.h"
 #include "models/Persona.h"
 #include "models/Producto.h"
+#include "models/ItemPedido.h"
 #include "models/Pedido.h"
 #include "api/IObservadorCore.h"
 #include "core/MenuCafeteria.h"
@@ -187,8 +200,16 @@ void SistemaPedidos::notificarObservadores(const Pedido *pedido)
 // Métodos de ICoreSistema (API)
 std::vector<InfoProducto> SistemaPedidos::getMenu()
 {
-    // TODO: Implementar conversión de productos a InfoProducto
-    return std::vector<InfoProducto>{};
+    std::vector<InfoProducto> menuDTO;
+    for (const auto *producto : productos)
+    {
+        InfoProducto dto;
+        dto.id = producto->getId();
+        dto.nombre = producto->getNombre();
+        dto.precio = producto->getPrecio();
+        menuDTO.push_back(dto);
+    }
+    return menuDTO;
 }
 
 std::vector<InfoDescuento> SistemaPedidos::getDescuentosDisponibles()
@@ -208,8 +229,15 @@ void SistemaPedidos::finalizarPedido(const std::string &cliente,
 
 std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
 {
-    // TODO: Implementar conversión de pedidos en cola a InfoPedido
-    return std::vector<InfoPedido>{};
+    std::vector<InfoPedido> pedidosDTO;
+    // DECISIÓN DE DISEÑO:
+    // La conversión real de los pedidos en cola a InfoPedido se pospone hasta que
+    // Cola<Pedido*> implemente un iterador compatible o se reemplace por std::deque.
+    // Esto permitirá recorrer la cola y exponer los datos a la API de forma limpia.
+    // Por ahora, la función retorna vacío y deja la estructura lista para futura refactorización.
+    // Ejemplo de conversión (pendiente de iterador):
+    // for (Pedido* pedido : pedidos_en_espera) { ... }
+    return pedidosDTO;
 }
 
 void SistemaPedidos::procesarSiguientePedido()
