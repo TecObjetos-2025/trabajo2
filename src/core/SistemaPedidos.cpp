@@ -2,10 +2,11 @@
 #include "models/Persona.h"
 #include "models/Producto.h"
 #include "models/Pedido.h"
-#include "patterns/Observador.h"
+#include "api/IObservadorCore.h"
 #include "core/MenuCafeteria.h"
 #include <iostream>
 #include <stdexcept> // Capturar excepciones en la Cola
+#include <algorithm> // Para std::find
 
 // Constructor
 SistemaPedidos::SistemaPedidos()
@@ -158,20 +159,63 @@ void SistemaPedidos::finalizarPedido(Pedido *pedido)
     }
 }
 
-// Metodos del Observador
-void SistemaPedidos::agregarObservador(Observador *obs)
+// Métodos Observer API
+void SistemaPedidos::registrarObservador(IObservadorCore *observador)
 {
-    observadores.push_back(obs);
+    observadores.push_back(observador);
 }
 
-// Notificar a todos los observadores en la lista
+void SistemaPedidos::removerObservador(IObservadorCore *observador)
+{
+    auto it = std::find(observadores.begin(), observadores.end(), observador);
+    if (it != observadores.end())
+    {
+        observadores.erase(it);
+    }
+}
+
 void SistemaPedidos::notificarObservadores(const Pedido *pedido)
 {
-    std::cout << "\n[SISTEMA] Notificando a " << observadores.size() << " observador(es)..." << std::endl;
+    std::cout << "\n[SISTEMA] Notificando a " << observadores.size() << " observador(es) (API)..." << std::endl;
     for (auto *obs : observadores)
     {
-        obs->actualizar(pedido);
+        if (pedido)
+            obs->onNuevosPedidosEnCola(); // Ejemplo: notificar cambio en la cola
+        // Se pueden agregar más notificaciones según el evento
     }
+}
+// Métodos de ICoreSistema (API)
+std::vector<InfoProducto> SistemaPedidos::getMenu()
+{
+    // TODO: Implementar conversión de productos a InfoProducto
+    return std::vector<InfoProducto>{};
+}
+
+std::vector<InfoDescuento> SistemaPedidos::getDescuentosDisponibles()
+{
+    // TODO: Implementar lógica real
+    return std::vector<InfoDescuento>{};
+}
+
+void SistemaPedidos::finalizarPedido(const std::string &cliente,
+                                     const std::vector<ItemPedidoCrear> &items,
+                                     const std::string &id_descuentos)
+{
+    // TODO: Crear pedido, agregar a cola y notificar
+    // Por ahora, solo notifica
+    notificarObservadores(nullptr);
+}
+
+std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
+{
+    // TODO: Implementar conversión de pedidos en cola a InfoPedido
+    return std::vector<InfoPedido>{};
+}
+
+void SistemaPedidos::procesarSiguientePedido()
+{
+    // TODO: Procesar pedido y notificar
+    notificarObservadores(nullptr);
 }
 
 // Implementacion Practica 5: Procesar el siguiente pedido en la cola
@@ -180,15 +224,13 @@ void SistemaPedidos::notificarObservadores(const Pedido *pedido)
  * @brief Implementacion del "Consumidor" (Cocinero).
  * Desencolar el siguiente pedido en la cola y devolverlo para su procesamiento.
  */
-Pedido *SistemaPedidos::procesarSiguientePedido()
+Pedido *SistemaPedidos::procesarSiguientePedidoInterno()
 {
     std::cout << "\n[COCINERO] Buscando nuevo pedido en la cola..." << std::endl;
     try
     {
         Pedido *pedidoProcesado = pedidos_en_espera.desencolar();
-
         std::cout << "[COCINERO] ...Pedido #" << pedidoProcesado->getId() << " listo para ser procesado." << std::endl;
-
         return pedidoProcesado;
     }
     catch (const std::runtime_error &e)

@@ -11,52 +11,51 @@ class Producto;
 class Observador;
 class MenuCafeteria;
 
-class SistemaPedidos
+#include "api/ICoreSistema.h"
+#include "api/IObservadorCore.h"
+
+class SistemaPedidos : public ICoreSistema
 {
 private:
     MenuCafeteria *menu;
     std::vector<Persona *> personas;
-    // std::vector<Pedido *> pedidos;
-    Cola<Pedido *> pedidos_en_espera; // <- Cambio a Cola de punteros (FIFO)
-    std::vector<Observador *> observadores;
+    Cola<Pedido *> pedidos_en_espera;
+    std::vector<IObservadorCore *> observadores; // Refactor: ahora son IObservadorCore*
     std::vector<Producto *> productos;
 
     int proximoIdPersona = 1;
 
 public:
-    SistemaPedidos(); // Constructor
+    SistemaPedidos();
+    ~SistemaPedidos();
 
-    ~SistemaPedidos(); // <- Manejo de memoria en el destructor
-
-    // Mejora de delegacion
+    // Delegación y gestión
     void mostrarMenu() const;
-
     void registrarPersona(Persona *persona);
     Persona *buscarPersonaPorId(int id);
     void mostrarTodasLasPersonas() const;
-
-    void inicializarMenu(); // Para agregar productos de ejemplo
-
-    // Pedido &crearPedido(Cliente &cliente);
+    void inicializarMenu();
     void agregarProductoAPedido(Pedido &pedido, int idProducto, int cantidad);
-
     void agregarProducto(Producto *producto);
-
-    /**
-     * @brief Actuar como "Procesador de Pedidos": agregar un nuevo pedido a la cola
-     */
     void finalizarPedido(Pedido *pedido);
 
-    // Métodos del patrón Observer
-    void agregarObservador(Observador *obs);
-    void notificarObservadores(const Pedido *pedido);
+    // Métodos Observer API
+    void registrarObservador(IObservadorCore *observador) override;
+    void removerObservador(IObservadorCore *observador) override;
+    void notificarObservadores(const Pedido *pedido); // Interno
 
-    /**
-     * @brief Metodo para actuar como "Consumidor de Pedidos": procesar el siguiente pedido en la cola
-     */
-    Pedido *procesarSiguientePedido(); // <- NUEVO
+    // Métodos API
+    std::vector<InfoProducto> getMenu() override;
+    std::vector<InfoDescuento> getDescuentosDisponibles() override;
+    void finalizarPedido(const std::string &cliente,
+                         const std::vector<ItemPedidoCrear> &items,
+                         const std::string &id_descuentos) override;
+    std::vector<InfoPedido> getPedidosEnCola() override;
+    void procesarSiguientePedido() override;
 
-    void mostrarPedidosEnEspera() const; // <- NUEVO
+    // Otros
+    Pedido *procesarSiguientePedidoInterno();
+    void mostrarPedidosEnEspera() const;
 };
 
 #endif // SISTEMAPEDIDOS_H
