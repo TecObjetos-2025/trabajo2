@@ -46,11 +46,12 @@ void CoreFalso::finalizarPedido(const std::string &cliente,
     std::cout << " Items: " << items.size() << std::endl;
     std::cout << " Descuento: " << id_descuentos << std::endl;
 
-    // TODO: Notificar a los observadores que hay nuevos pedidos en cola
-    // for (auto obs : observadores)
-    // {
-    //    obs->onNuevosPedidosEnCola();
-    // }
+    // Notificar a los observadores que hay nuevos pedidos en cola
+    std::cout << "[CoreFalso] Notificando a observadores sobre nuevos pedidos en cola." << std::endl;
+    for (IObservadorCore *obs : observadores)
+    {
+        obs->onNuevosPedidosEnCola();
+    }
 }
 
 // Funciones "Vista Cocina"
@@ -83,9 +84,14 @@ void CoreFalso::procesarSiguientePedido()
 {
     std::cout << "[CoreFalso] procesarSiguientePedido llamado. Simulando procesamiento..." << std::endl;
 
-    // TODO: Notificar a los observadores que un pedido ha sido terminado
-    // for (auto obs : observadores)
-    // {
-    //    obs->onPedidoTerminado(1001); // ID de pedido fake
-    // }
+    // Notificar a los observadores que un pedido ha sido terminado
+    std::cout << "[CoreFalso] Notificando a observadores sobre pedido terminado." << std::endl;
+    for (IObservadorCore *obs : observadores)
+    {
+        // TODO: Simulacion de eliminar el siguiente pedido de la cola
+        obs->onNuevosPedidosEnCola();
+
+        // Simulacion de pedido terminado
+        // obs->onPedidoTerminado(1001); // ID de pedido fake
+    }
 }
