@@ -1,3 +1,15 @@
+#include "core/SistemaPedidos.h"
+#include "models/Persona.h"
+#include "models/Producto.h"
+#include "models/ItemPedido.h"
+#include "api/ApiDTOs.h"
+#include "models/Pedido.h"
+#include "api/IObservadorCore.h"
+#include "core/MenuCafeteria.h"
+#include <iostream>
+#include <stdexcept> // Capturar excepciones en la Cola
+#include <algorithm> // Para std::find
+
 // Función auxiliar para convertir ItemPedido a ItemPedidoInfo
 static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
 {
@@ -10,16 +22,6 @@ static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
     }
     return dto;
 }
-#include "core/SistemaPedidos.h"
-#include "models/Persona.h"
-#include "models/Producto.h"
-#include "models/ItemPedido.h"
-#include "models/Pedido.h"
-#include "api/IObservadorCore.h"
-#include "core/MenuCafeteria.h"
-#include <iostream>
-#include <stdexcept> // Capturar excepciones en la Cola
-#include <algorithm> // Para std::find
 
 // Constructor
 SistemaPedidos::SistemaPedidos()

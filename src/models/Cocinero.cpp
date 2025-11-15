@@ -25,7 +25,7 @@ void Cocinero::actualizar(const Pedido *pedido)
 void Cocinero::cocinarSiguientePedido()
 {
     // Cocinero como "Consumidor de Pedidos"
-    Pedido *pedido = this->sistema->procesarSiguientePedido();
+    Pedido *pedido = this->sistema->procesarSiguientePedidoInterno();
 
     // Responsabilidad de procesar el pedido
     if (pedido != nullptr)
@@ -37,4 +37,20 @@ void Cocinero::cocinarSiguientePedido()
         std::cout << "[COCINERO] Pedido #" << pedido->getId() << " listo!" << std::endl;
         delete pedido; // Liberar memoria despues de procesar
     }
+}
+
+// Métodos de IObservadorCore (stubs)
+void Cocinero::onNuevosPedidosEnCola()
+{
+    std::cout << "[Cocinero] Notificado: Hay nuevos pedidos en cola." << std::endl;
+}
+
+void Cocinero::onPedidoTerminado(int id_pedido)
+{
+    std::cout << "[Cocinero] Notificado: Pedido terminado, id=" << id_pedido << std::endl;
+}
+
+void Cocinero::onError(const std::string &mensaje)
+{
+    std::cout << "[Cocinero] Error: " << mensaje << std::endl;
 }

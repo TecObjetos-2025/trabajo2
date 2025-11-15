@@ -39,3 +39,19 @@ void Administrador::mostrarEstadisticasVentas() const
     }
     std::cout << "--------------------------------------" << std::endl;
 }
+
+// Métodos de IObservadorCore (stubs)
+void Administrador::onNuevosPedidosEnCola()
+{
+    std::cout << "[Administrador] Notificado: Hay nuevos pedidos en cola." << std::endl;
+}
+
+void Administrador::onPedidoTerminado(int id_pedido)
+{
+    std::cout << "[Administrador] Notificado: Pedido terminado, id=" << id_pedido << std::endl;
+}
+
+void Administrador::onError(const std::string &mensaje)
+{
+    std::cout << "[Administrador] Error: " << mensaje << std::endl;
+}
