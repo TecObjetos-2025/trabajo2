@@ -1,8 +1,10 @@
+
 #ifndef COLA_H
 #define COLA_H
 
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 // Nodo para la estructura de datos Cola
 // Plantilla genérica para permitir cualquier tipo de dato
@@ -24,6 +26,23 @@ private:
     Nodo<T> *final;  // Puntero al final de la cola
 
 public:
+    // ==============================================
+    /**
+     * @brief Devuelve un vector con todos los elementos actuales de la cola (snapshot)
+     */
+    std::vector<T> obtenerElementos() const
+    {
+        std::vector<T> elementos;
+        Nodo<T> *actual = frente;
+        while (actual != nullptr)
+        {
+            elementos.push_back(actual->valor);
+            actual = actual->siguiente;
+        }
+        return elementos;
+    }
+    // ==============================================
+
     // -- Metodos escenciales de la Cola --
 
     // Inicializar cola vacía
