@@ -35,7 +35,7 @@ void Cocinero::cocinarSiguientePedido()
         // std::this_thread::sleep_for(std::chrono::seconds(2));
         pedido->setEstado("COMPLETADO");
         std::cout << "[COCINERO] Pedido #" << pedido->getId() << " listo!" << std::endl;
-        delete pedido; // Liberar memoria despues de procesar
+        // No liberar manualmente, gestionado por shared_ptr
     }
 }
 

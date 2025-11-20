@@ -17,8 +17,9 @@ void Administrador::mostrarInfo() const
 void Administrador::actualizar(const Pedido *pedido)
 {
     // Actualizar stats al notificar un pedido
-    for (const ItemPedido *item : pedido->getItems())
+    for (const auto &itemPtr : pedido->getItems())
     {
+        const ItemPedido *item = itemPtr.get();
         ventasPorProducto[item->getProducto()->getNombre()] += item->getCantidad();
     }
 }
