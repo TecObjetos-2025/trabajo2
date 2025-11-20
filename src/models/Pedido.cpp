@@ -7,23 +7,16 @@
 const double Pedido::IGV = 0.18;
 
 // Constructor para asociar un cliente a un pedido
-Pedido::Pedido(int id, const Cliente *cliente)
+Pedido::Pedido(int id, std::shared_ptr<Cliente> cliente)
     : id(id), cliente(cliente), estado("EN_PROCESO") {}
 
 // Nuevo! Destructor para liberar memoria
-Pedido::~Pedido()
-{
-    for (ItemPedido *item : items)
-    {
-        delete item;
-    }
-}
+Pedido::~Pedido() = default;
 
 // Agregar items
-void Pedido::agregarItem(const Producto *producto, int cantidad)
+void Pedido::agregarItem(std::shared_ptr<Producto> producto, int cantidad)
 {
-    // Añadir al final (se crea automaticamente el objeto)
-    items.push_back(new ItemPedido(producto, cantidad));
+    items.push_back(std::make_unique<ItemPedido>(std::move(producto), cantidad));
 }
 
 double Pedido::calcularTotal() const
@@ -42,12 +35,12 @@ int Pedido::getId() const
     return id;
 }
 
-const Cliente *Pedido::getCliente() const
+std::shared_ptr<Cliente> Pedido::getCliente() const
 {
-    return cliente;
+    return cliente.lock();
 }
 
-const std::vector<ItemPedido *> &Pedido::getItems() const
+const std::vector<std::unique_ptr<ItemPedido>> &Pedido::getItems() const
 {
     return items;
 }

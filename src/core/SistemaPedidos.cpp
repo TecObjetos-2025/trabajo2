@@ -1,5 +1,6 @@
 #include "core/SistemaPedidos.h"
 #include "models/Persona.h"
+#include "models/Cliente.h"
 #include "models/Producto.h"
 #include "models/ItemPedido.h"
 #include "api/ApiDTOs.h"
@@ -26,35 +27,14 @@ static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
 // Constructor
 SistemaPedidos::SistemaPedidos()
 {
-    this->menu = new MenuCafeteria();
+    menu = std::make_unique<MenuCafeteria>();
 }
 
 // Destructor para liberar memoria
 SistemaPedidos::~SistemaPedidos()
 {
     std::cout << "Liberar memoria del sistema..." << std::endl;
-
-    // De las personas
-    for (Persona *p : personas)
-    {
-        delete p;
-    }
-
-    // De productos
-    for (Producto *p : productos)
-    {
-        delete p;
-    }
-
-    // Vaciar la cola de pedidos y liberar memoria
-    std::cout << "Liberando pedidos en espera..." << std::endl;
-    while (!pedidos_en_espera.estaVacia())
-    {
-        Pedido *pedido = pedidos_en_espera.desencolar();
-        delete pedido;
-    }
-
-    delete menu;
+    // No es necesario liberar manualmente, los punteros inteligentes lo hacen automáticamente
 }
 
 // Mejora de delegacion al mostrar el menu
@@ -73,9 +53,9 @@ void SistemaPedidos::inicializarMenu()
 }
 
 // Nueva gestion
-void SistemaPedidos::registrarPersona(Persona *persona)
+void SistemaPedidos::registrarPersona(std::shared_ptr<Persona> persona)
 {
-    if (persona != nullptr)
+    if (persona)
     {
         personas.push_back(persona);
     }
@@ -83,11 +63,11 @@ void SistemaPedidos::registrarPersona(Persona *persona)
 
 Persona *SistemaPedidos::buscarPersonaPorId(int id)
 {
-    for (Persona *p : personas)
+    for (const auto &p : personas)
     {
-        if (p->getId() == id)
+        if (p && p->getId() == id)
         {
-            return p;
+            return p.get();
         }
     }
     return nullptr;
@@ -96,10 +76,13 @@ Persona *SistemaPedidos::buscarPersonaPorId(int id)
 void SistemaPedidos::mostrarTodasLasPersonas() const
 {
     std::cout << "\n--- Lista de Personas Registradas ---" << std::endl;
-    for (const Persona *p : personas)
+    for (const auto &p : personas)
     {
-        p->mostrarInfo();
-        std::cout << "----------------------" << std::endl;
+        if (p)
+        {
+            p->mostrarInfo();
+            std::cout << "----------------------" << std::endl;
+        }
     }
 }
 
@@ -137,11 +120,28 @@ Pedido &SistemaPedidos::crearPedido(Cliente &cliente)
 // Agregar un producto a un pedido existente.
 void SistemaPedidos::agregarProductoAPedido(Pedido &pedido, int idProducto, int cantidad)
 {
-    const Producto *producto = menu->getProductoPorId(idProducto);
-    if (producto != nullptr)
+    const Producto *productoRaw = menu->getProductoPorId(idProducto);
+    if (productoRaw != nullptr)
     {
-        pedido.agregarItem(producto, cantidad);
-        std::cout << "Se agregaron " << cantidad << "x " << producto->getNombre() << " al pedido." << std::endl;
+        // Buscar el shared_ptr correspondiente en productos
+        std::shared_ptr<Producto> productoPtr;
+        for (const auto &prod : productos)
+        {
+            if (prod && prod->getId() == idProducto)
+            {
+                productoPtr = std::shared_ptr<Producto>(prod.get(), [](Producto *) {}); // aliasing, no ownership
+                break;
+            }
+        }
+        if (productoPtr)
+        {
+            pedido.agregarItem(productoPtr, cantidad);
+            std::cout << "Se agregaron " << cantidad << "x " << productoRaw->getNombre() << " al pedido." << std::endl;
+        }
+        else
+        {
+            std::cout << "Error: Producto con ID " << idProducto << " no gestionado por el sistema." << std::endl;
+        }
     }
     else
     {
@@ -149,7 +149,7 @@ void SistemaPedidos::agregarProductoAPedido(Pedido &pedido, int idProducto, int 
     }
 }
 
-void SistemaPedidos::agregarProducto(Producto *producto)
+void SistemaPedidos::agregarProducto(std::shared_ptr<Producto> producto)
 {
     if (producto)
     {
@@ -157,7 +157,7 @@ void SistemaPedidos::agregarProducto(Producto *producto)
     }
 }
 
-void SistemaPedidos::finalizarPedido(Pedido *pedido)
+void SistemaPedidos::finalizarPedido(std::shared_ptr<Pedido> pedido)
 {
     if (pedido)
     {
@@ -170,31 +170,40 @@ void SistemaPedidos::finalizarPedido(Pedido *pedido)
         pedidos_en_espera.encolar(pedido);
 
         std::cout << "Notificando..." << std::endl;
-        notificarObservadores(pedido);
+        notificarObservadores(pedido.get());
     }
 }
 
 // Métodos Observer API
-void SistemaPedidos::registrarObservador(IObservadorCore *observador)
+void SistemaPedidos::registrarObservador(std::shared_ptr<IObservadorCore> observador)
 {
-    observadores.push_back(observador);
+    if (observador)
+        observadores.push_back(observador);
 }
 
 void SistemaPedidos::removerObservador(IObservadorCore *observador)
 {
-    auto it = std::find(observadores.begin(), observadores.end(), observador);
+    auto it = std::find_if(observadores.begin(), observadores.end(), [observador](const std::shared_ptr<IObservadorCore> &ptr)
+                           { return ptr.get() == observador; });
     if (it != observadores.end())
     {
         observadores.erase(it);
     }
 }
 
+// Satisface la interfaz ICoreSistema (version con puntero crudo)
+void SistemaPedidos::registrarObservador(IObservadorCore *observador)
+{
+    // No ownership transfer here; si se llama la version cruda, crear un weak wrapper no es seguro.
+    // Esta implementación queda como stub para mantener compatibilidad con la interfaz antigua.
+}
+
 void SistemaPedidos::notificarObservadores(const Pedido *pedido)
 {
     std::cout << "\n[SISTEMA] Notificando a " << observadores.size() << " observador(es) (API)..." << std::endl;
-    for (auto *obs : observadores)
+    for (const auto &obs : observadores)
     {
-        if (pedido)
+        if (pedido && obs)
             obs->onNuevosPedidosEnCola(); // Ejemplo: notificar cambio en la cola
         // Se pueden agregar más notificaciones según el evento
     }
@@ -203,7 +212,7 @@ void SistemaPedidos::notificarObservadores(const Pedido *pedido)
 std::vector<InfoProducto> SistemaPedidos::getMenu()
 {
     std::vector<InfoProducto> menuDTO;
-    for (const auto *producto : productos)
+    for (const auto &producto : productos)
     {
         InfoProducto dto;
         dto.id = producto->getId();
@@ -232,13 +241,21 @@ void SistemaPedidos::finalizarPedido(const std::string &cliente,
 std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
 {
     std::vector<InfoPedido> pedidosDTO;
-    // DECISIÓN DE DISEÑO:
-    // La conversión real de los pedidos en cola a InfoPedido se pospone hasta que
-    // Cola<Pedido*> implemente un iterador compatible o se reemplace por std::deque.
-    // Esto permitirá recorrer la cola y exponer los datos a la API de forma limpia.
-    // Por ahora, la función retorna vacío y deja la estructura lista para futura refactorización.
-    // Ejemplo de conversión (pendiente de iterador):
-    // for (Pedido* pedido : pedidos_en_espera) { ... }
+    std::vector<std::shared_ptr<Pedido>> snapshot = pedidos_en_espera.obtenerElementos();
+    for (const auto &pedido : snapshot)
+    {
+        InfoPedido dto;
+        dto.id_pedido = pedido->getId();
+        dto.cliente = pedido->getCliente() ? pedido->getCliente()->getNombre() : "";
+        dto.estado = pedido->getEstado();
+        dto.total_final = pedido->calcularTotal();
+        for (const auto &itemPtr : pedido->getItems())
+        {
+            const ItemPedido *item = itemPtr.get();
+            dto.items.push_back(convertirItemPedido(item));
+        }
+        pedidosDTO.push_back(dto);
+    }
     return pedidosDTO;
 }
 
@@ -259,8 +276,12 @@ Pedido *SistemaPedidos::procesarSiguientePedidoInterno()
     std::cout << "\n[COCINERO] Buscando nuevo pedido en la cola..." << std::endl;
     try
     {
-        Pedido *pedidoProcesado = pedidos_en_espera.desencolar();
-        std::cout << "[COCINERO] ...Pedido #" << pedidoProcesado->getId() << " listo para ser procesado." << std::endl;
+        auto pedidoProcesadoPtr = pedidos_en_espera.desencolar();
+        Pedido *pedidoProcesado = pedidoProcesadoPtr.get();
+        if (pedidoProcesado)
+        {
+            std::cout << "[COCINERO] ...Pedido #" << pedidoProcesado->getId() << " listo para ser procesado." << std::endl;
+        }
         return pedidoProcesado;
     }
     catch (const std::runtime_error &e)
