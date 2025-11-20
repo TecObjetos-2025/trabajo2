@@ -17,14 +17,17 @@ int main()
     SistemaPedidos sistema;
 
     // Agregar productos
-    sistema.agregarProducto(new Producto(101, "Cafe Americano", 5.50, "Bebidas"));
-    sistema.agregarProducto(new Producto(102, "Pan con Chicharron", 7.00, "Desayuno"));
-    sistema.agregarProducto(new Producto(103, "Jugo de Papaya", 6.00, "Bebidas"));
+    auto prod1 = std::make_shared<Producto>(101, "Cafe Americano", 5.50, "Bebidas");
+    auto prod2 = std::make_shared<Producto>(102, "Pan con Chicharron", 7.00, "Desayuno");
+    auto prod3 = std::make_shared<Producto>(103, "Jugo de Papaya", 6.00, "Bebidas");
+    sistema.agregarProducto(prod1);
+    sistema.agregarProducto(prod2);
+    sistema.agregarProducto(prod3);
 
     // Crear diferentes Personas
-    Persona *cliente1 = new Cliente(1, "Carlos Juarez", "987654321");
-    Persona *cocinero1 = new Cocinero(2, "Ana Guevara", "EMP-001", &sistema);
-    Persona *admin1 = new Administrador(3, "Juan Castro", "EMP-002");
+    auto cliente1 = std::make_shared<Cliente>(1, "Carlos Juarez", "987654321");
+    auto cocinero1 = std::make_shared<Cocinero>(2, "Ana Guevara", "EMP-001", &sistema);
+    auto admin1 = std::make_shared<Administrador>(3, "Juan Castro", "EMP-002");
 
     sistema.registrarPersona(cliente1);
     sistema.registrarPersona(cocinero1);
@@ -32,40 +35,35 @@ int main()
 
     // Configurar Observadores
 
-    Cocinero *ptrCocinero = dynamic_cast<Cocinero *>(cocinero1);
-    if (ptrCocinero)
-        sistema.registrarObservador(ptrCocinero);
+    sistema.registrarObservador(cocinero1);
+    sistema.registrarObservador(admin1);
 
-    Administrador *ptrAdmin = dynamic_cast<Administrador *>(admin1);
-    if (ptrAdmin)
-        sistema.registrarObservador(ptrAdmin);
+    Cocinero *ptrCocinero = dynamic_cast<Cocinero *>(cocinero1.get());
+    Administrador *ptrAdmin = dynamic_cast<Administrador *>(admin1.get());
 
     // sistema.mostrarTodasLasPersonas();
 
     // -- SIMULACION PRACTICA 5 --
     std::cout << "\n --- SIMULACION FIFO (PRACTICA 5) --- " << std::endl;
 
-    Cliente *ptrCliente = dynamic_cast<Cliente *>(cliente1);
+    Cliente *ptrCliente = dynamic_cast<Cliente *>(cliente1.get());
     if (ptrCliente)
     {
         // 1. Cajero crear y encola pedidos
         std::cout << "\n[CAJERO] Registrando 3 pedidos..." << std::endl;
 
         // Pedido 1 (P1)
-        Pedido *pedido1 = new Pedido(1001, ptrCliente);
-        //  El cliente pide productos
-        pedido1->agregarItem(new Producto(101, "Cafe Americano", 5.50, "Bebidas"), 2);
-        sistema.finalizarPedido(pedido1); // P2 se encola
+        auto pedido1 = std::make_shared<Pedido>(1001, cliente1);
+        pedido1->agregarItem(prod1, 2);
+        sistema.finalizarPedido(pedido1);
 
-        // Pedido 2 (P2)
-        Pedido *pedido2 = new Pedido(1002, ptrCliente);
-        pedido2->agregarItem(new Producto(102, "Pan con Chicharron", 7.00, "Desayuno"), 1);
-        sistema.finalizarPedido(pedido2); // P2 se encola
+        auto pedido2 = std::make_shared<Pedido>(1002, cliente1);
+        pedido2->agregarItem(prod2, 1);
+        sistema.finalizarPedido(pedido2);
 
-        // Pedido 3 (P3)
-        Pedido *pedido3 = new Pedido(1003, ptrCliente);
-        pedido3->agregarItem(new Producto(103, "Jugo de Papaya", 6.00, "Bebidas"), 1);
-        sistema.finalizarPedido(pedido3); // P3 se encola
+        auto pedido3 = std::make_shared<Pedido>(1003, cliente1);
+        pedido3->agregarItem(prod3, 1);
+        sistema.finalizarPedido(pedido3);
 
         // 2. Mostrar cola de pedidos en espera
         // (Esto debe mostrar las direcciones de memoria de P1, P2, P3 en orden)
