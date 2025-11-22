@@ -271,23 +271,32 @@ void SistemaPedidos::procesarSiguientePedido()
  * @brief Implementacion del "Consumidor" (Cocinero).
  * Desencolar el siguiente pedido en la cola y devolverlo para su procesamiento.
  */
-Pedido *SistemaPedidos::procesarSiguientePedidoInterno()
+std::shared_ptr<Pedido> SistemaPedidos::procesarSiguientePedidoInterno()
 {
     std::cout << "\n[COCINERO] Buscando nuevo pedido en la cola..." << std::endl;
     try
     {
         auto pedidoProcesadoPtr = pedidos_en_espera.pop();
-        Pedido *pedidoProcesado = pedidoProcesadoPtr.get();
-        if (pedidoProcesado)
+        if (pedidoProcesadoPtr)
         {
-            std::cout << "[COCINERO] ...Pedido #" << pedidoProcesado->getId() << " listo para ser procesado." << std::endl;
+            std::cout << "[COCINERO] ...Pedido #" << pedidoProcesadoPtr->getId() << " listo para ser procesado." << std::endl;
         }
-        return pedidoProcesado;
+        return pedidoProcesadoPtr;
     }
     catch (const std::runtime_error &e)
     {
         std::cout << "[COCINERO] No hay pedidos en espera para procesar." << std::endl;
         return nullptr;
+    }
+}
+
+void SistemaPedidos::notificarPedidoTerminado(const std::shared_ptr<Pedido> &pedido)
+{
+    std::cout << "[SISTEMA] Notificando que el pedido #" << (pedido ? pedido->getId() : -1) << " ha sido terminado..." << std::endl;
+    for (const auto &obs : observadores)
+    {
+        if (obs && pedido)
+            obs->onPedidoTerminado(pedido->getId());
     }
 }
 

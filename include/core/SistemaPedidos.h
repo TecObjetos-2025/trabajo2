@@ -17,6 +17,9 @@ class MenuCafeteria;
 
 class SistemaPedidos : public ICoreSistema
 {
+public:
+    void cerrarColaPedidos() { pedidos_en_espera.cerrar(); }
+
 private:
     std::unique_ptr<MenuCafeteria> menu;
     std::vector<std::shared_ptr<Persona>> personas;
@@ -57,7 +60,8 @@ public:
     void procesarSiguientePedido() override;
 
     // Otros
-    Pedido *procesarSiguientePedidoInterno();
+    std::shared_ptr<Pedido> procesarSiguientePedidoInterno();
+    void notificarPedidoTerminado(const std::shared_ptr<Pedido> &pedido);
     void mostrarPedidosEnEspera() const;
 };
 
