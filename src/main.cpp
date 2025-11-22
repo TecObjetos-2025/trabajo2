@@ -1,5 +1,6 @@
 #include <iostream>
 #include <limits> // Para limpiar cin
+#include <thread>
 #include "core/SistemaPedidos.h"
 #include "models/Persona.h"
 #include "models/Cliente.h"
@@ -123,10 +124,19 @@ int main()
     if (pedidosDTO.empty())
         std::cout << "  (Ninguno o pendiente de refactorización de Cola)" << std::endl;
 
-    // Detener hilo del cocinero antes de terminar
+    // Cerrar la cola y detener hilo del cocinero antes de terminar
+    // (Evita que el hilo quede bloqueado si la app se cierra)
+    sistema.cerrarColaPedidos();
     if (ptrCocinero)
     {
-        ptrCocinero->detener();
+        try
+        {
+            ptrCocinero->detener();
+        }
+        catch (const std::exception &e)
+        {
+            std::cout << "[MAIN] Hilo cocinero terminado por cierre de cola: " << e.what() << std::endl;
+        }
     }
 
     std::cout << "\n--- FIN ---" << std::endl;

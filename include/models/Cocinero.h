@@ -4,6 +4,7 @@
 #include "models/Empleado.h"
 #include "patterns/Observador.h"
 #include "api/IObservadorCore.h"
+#include <atomic>
 
 class SistemaPedidos; // Declaración adelantada
 
