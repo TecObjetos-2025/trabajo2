@@ -12,12 +12,23 @@ class Cocinero : public Empleado, public Observador, public IObservadorCore
 {
 private:
     SistemaPedidos *sistema; // <- Puntero al sistema de pedidos
+    std::thread hiloCocina;
+    std::atomic<bool> activo{false};
+
+    // Ciclo principal del hilo consumidor
+    void cicloCocina();
+
+public:
 public:
     Cocinero(int id, const std::string &nombre, const std::string &codigoEmpleado, SistemaPedidos *sistema = nullptr);
 
     void mostrarInfo() const override;
     void actualizar(const Pedido *pedido) override;
     void cocinarSiguientePedido();
+
+    // Multithreading
+    void iniciar();
+    void detener();
 
     // Métodos de IObservadorCore
     void onNuevosPedidosEnCola() override;

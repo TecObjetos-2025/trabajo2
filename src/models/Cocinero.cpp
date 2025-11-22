@@ -1,3 +1,6 @@
+#include <thread>
+#include <atomic>
+#include <chrono>
 #include "models/Cocinero.h"
 #include "models/Pedido.h"
 #include "core/SistemaPedidos.h"
@@ -5,6 +8,40 @@
 
 Cocinero::Cocinero(int id, const std::string &nombre, const std::string &codigoEmpleado, SistemaPedidos *sistema)
     : Empleado(id, nombre, codigoEmpleado), sistema(sistema) {}
+
+void Cocinero::iniciar()
+{
+    activo = true;
+    hiloCocina = std::thread(&Cocinero::cicloCocina, this);
+}
+
+void Cocinero::detener()
+{
+    activo = false;
+    if (hiloCocina.joinable())
+        hiloCocina.join();
+}
+
+void Cocinero::cicloCocina()
+{
+    while (activo)
+    {
+        // Consumir pedidos de la cola
+        Pedido *pedido = this->sistema->procesarSiguientePedidoInterno();
+        if (pedido != nullptr)
+        {
+            std::cout << "[COCINERO] " << this->getNombre() << " cocinando Pedido #" << pedido->getId() << "..." << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(2)); // Simula tiempo de cocina
+            pedido->setEstado("COMPLETADO");
+            std::cout << "[COCINERO] Pedido #" << pedido->getId() << " listo!" << std::endl;
+        }
+        else
+        {
+            // Si no hay pedidos, dormir un poco antes de volver a intentar
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+    }
+}
 
 void Cocinero::mostrarInfo() const
 {
