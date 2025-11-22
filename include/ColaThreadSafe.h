@@ -15,6 +15,7 @@ private:
     std::deque<T> cola;
     mutable std::mutex mtx;
     std::condition_variable cv;
+    bool cerrada = false;
 
 public:
     ColaThreadSafe() = default;
@@ -25,6 +26,8 @@ public:
     {
         {
             std::lock_guard<std::mutex> lock(mtx);
+            if (cerrada)
+                throw std::runtime_error("Cola cerrada");
             cola.push_back(elemento);
         }
         cv.notify_one();
@@ -35,10 +38,23 @@ public:
     {
         std::unique_lock<std::mutex> lock(mtx);
         cv.wait(lock, [this]
-                { return !cola.empty(); });
+                { return !cola.empty() || cerrada; });
+        if (cerrada && cola.empty())
+            throw std::runtime_error("Cola cerrada");
+        if (cola.empty())
+            return T();
         T elemento = cola.front();
         cola.pop_front();
         return elemento;
+    }
+
+    void cerrar()
+    {
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            cerrada = true;
+        }
+        cv.notify_all();
     }
 
     bool empty() const
