@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include "Cola.h"
+#include "ColaThreadSafe.h"
 
 class Persona;
 class Pedido;
@@ -20,7 +20,7 @@ class SistemaPedidos : public ICoreSistema
 private:
     std::unique_ptr<MenuCafeteria> menu;
     std::vector<std::shared_ptr<Persona>> personas;
-    Cola<std::shared_ptr<Pedido>> pedidos_en_espera;
+    ColaThreadSafe<std::shared_ptr<Pedido>> pedidos_en_espera;
     std::vector<std::shared_ptr<IObservadorCore>> observadores;
     std::vector<std::shared_ptr<Producto>> productos;
 

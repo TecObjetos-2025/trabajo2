@@ -167,7 +167,7 @@ void SistemaPedidos::finalizarPedido(std::shared_ptr<Pedido> pedido)
 
         // Agregar a la cola de pedidos en espera (NUEVO)
         std::cout << "[SISTEMA] Pedido #" << pedido->getId() << " agregado a la cola de pedidos en espera." << std::endl;
-        pedidos_en_espera.encolar(pedido);
+    pedidos_en_espera.push(pedido);
 
         std::cout << "Notificando..." << std::endl;
         notificarObservadores(pedido.get());
@@ -241,7 +241,7 @@ void SistemaPedidos::finalizarPedido(const std::string &cliente,
 std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
 {
     std::vector<InfoPedido> pedidosDTO;
-    std::vector<std::shared_ptr<Pedido>> snapshot = pedidos_en_espera.obtenerElementos();
+    std::deque<std::shared_ptr<Pedido>> snapshot = pedidos_en_espera.snapshot();
     for (const auto &pedido : snapshot)
     {
         InfoPedido dto;
@@ -276,7 +276,7 @@ Pedido *SistemaPedidos::procesarSiguientePedidoInterno()
     std::cout << "\n[COCINERO] Buscando nuevo pedido en la cola..." << std::endl;
     try
     {
-        auto pedidoProcesadoPtr = pedidos_en_espera.desencolar();
+    auto pedidoProcesadoPtr = pedidos_en_espera.pop();
         Pedido *pedidoProcesado = pedidoProcesadoPtr.get();
         if (pedidoProcesado)
         {
@@ -297,7 +297,17 @@ Pedido *SistemaPedidos::procesarSiguientePedidoInterno()
 void SistemaPedidos::mostrarPedidosEnEspera() const
 {
     std::cout << "\n --- ESTADO ACTUAL DE LA COLA DE PEDIDOS EN ESPERA --- " << std::endl;
-    pedidos_en_espera.mostrar();
+    // Mostrar elementos de la cola thread-safe
+    auto snapshot = pedidos_en_espera.snapshot();
+    if (snapshot.empty()) {
+        std::cout << "Cola vacía." << std::endl;
+    } else {
+        std::cout << "Elementos en la cola (FRENTE): ";
+        for (const auto& pedido : snapshot) {
+            if (pedido) std::cout << "[" << pedido->getId() << "] -> ";
+        }
+        std::cout << "FIN" << std::endl;
+    }
     std::cout << "-----------------------------------------------------\n"
               << std::endl;
 }
