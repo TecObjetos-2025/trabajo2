@@ -19,7 +19,6 @@ private:
     void cicloCocina();
 
 public:
-public:
     Cocinero(int id, const std::string &nombre, const std::string &codigoEmpleado, SistemaPedidos *sistema = nullptr);
 
     void mostrarInfo() const override;

@@ -41,6 +41,12 @@ int main()
     Cocinero *ptrCocinero = dynamic_cast<Cocinero *>(cocinero1.get());
     Administrador *ptrAdmin = dynamic_cast<Administrador *>(admin1.get());
 
+    // Iniciar hilo del cocinero
+    if (ptrCocinero)
+    {
+        ptrCocinero->iniciar();
+    }
+
     // sistema.mostrarTodasLasPersonas();
 
     // -- SIMULACION PRACTICA 5 --
@@ -65,23 +71,11 @@ int main()
         pedido3->agregarItem(prod3, 1);
         sistema.finalizarPedido(pedido3);
 
-        // 2. Mostrar cola de pedidos en espera
-        // (Esto debe mostrar las direcciones de memoria de P1, P2, P3 en orden)
-        sistema.mostrarPedidosEnEspera();
+        // Esperar a que el cocinero procese los pedidos
+        std::cout << "\n[MAIN] Esperando que el cocinero procese los pedidos..." << std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(7)); // Ajusta el tiempo según la cantidad de pedidos
 
-        // 3. Cocinero procesa los pedidos en orden FIFO
-        std::cout << "\n[MAIN] Dando orden al cocinero de trabajar con la FIFO..." << std::endl;
-
-        ptrCocinero->cocinarSiguientePedido(); // Procesa Pedido 1
-        ptrCocinero->cocinarSiguientePedido(); // Procesa Pedido 2
-
-        // Verificar el estado de la cola (Solo queda el Pedido 3)
-        std::cout << "\n[CAJERO] (Verificando estado de la cola antes del ultimo pedido...)" << std::endl;
-        sistema.mostrarPedidosEnEspera();
-
-        ptrCocinero->cocinarSiguientePedido(); // Procesa Pedido 3
-
-        // 4. Verificar que la cola este vacia
+        // Verificar que la cola este vacia
         std::cout << "\n[MAIN] Verificando que la cola este vacia..." << std::endl;
         sistema.mostrarPedidosEnEspera();  // Debe mostrar [COLA VACIA]
         sistema.procesarSiguientePedido(); // Debe mostrar error "No hay pedidos"
@@ -128,6 +122,12 @@ int main()
     }
     if (pedidosDTO.empty())
         std::cout << "  (Ninguno o pendiente de refactorización de Cola)" << std::endl;
+
+    // Detener hilo del cocinero antes de terminar
+    if (ptrCocinero)
+    {
+        ptrCocinero->detener();
+    }
 
     std::cout << "\n--- FIN ---" << std::endl;
 
