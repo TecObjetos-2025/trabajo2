@@ -1,7 +1,6 @@
 #include "models/Pedido.h"
 #include "models/Cliente.h"
 #include "models/ItemPedido.h"
-#include <iostream>
 
 // VARIABLE DE CLASE
 const double Pedido::IGV = 0.18;

@@ -1,6 +1,7 @@
 #ifndef PEDIDO_H
 #define PEDIDO_H
 
+#include <iostream>
 #include <vector>
 #include <string>
 #include <memory>
@@ -32,6 +33,16 @@ public:
     double calcularTotal() const;
     void setEstado(const std::string &nuevoEstado);
     void marcarComoPagado();
+
+    friend std::ostream &operator<<(std::ostream &os, const Pedido &pedido)
+    {
+        // Simplificado para mostrar info basica
+        os << "Pedido ID: " << pedido.id;
+
+        // Para Debug mas adelante
+        // os << "Pedido ID: " << pedido.id << ", Estado: " << pedido.estado << ", Total: $" << pedido.calcularTotal();
+        return os;
+    }
 };
 
 #endif // PEDIDO_H

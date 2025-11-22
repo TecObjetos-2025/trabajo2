@@ -5,6 +5,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <memory>
+#include <iostream>
 
 // Monitor thread-safe para cola de pedidos (o cualquier tipo)
 template <typename T>
@@ -57,6 +58,24 @@ public:
     {
         std::lock_guard<std::mutex> lock(mtx);
         return cola;
+    }
+
+    // Mostrar los elementos
+    void mostrar() const
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        if (cola.empty())
+        {
+            std::cout << "Cola vacía." << std::endl;
+            return;
+        }
+
+        std::cout << "Elementos en la cola (FRENTE): ";
+        for (const auto &elem : cola)
+        {
+            std::cout << "[" << *elem << "] -> ";
+        }
+        std::cout << "NULL" << std::endl;
     }
 };
 
