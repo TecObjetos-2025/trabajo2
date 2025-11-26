@@ -1,3 +1,6 @@
+#include <thread>
+#include <atomic>
+#include <chrono>
 #include "models/Cocinero.h"
 #include "models/Pedido.h"
 #include "core/SistemaPedidos.h"
@@ -5,6 +8,51 @@
 
 Cocinero::Cocinero(int id, const std::string &nombre, const std::string &codigoEmpleado, SistemaPedidos *sistema)
     : Empleado(id, nombre, codigoEmpleado), sistema(sistema) {}
+
+void Cocinero::iniciar()
+{
+    activo = true;
+    hiloCocina = std::thread(&Cocinero::cicloCocina, this);
+}
+
+void Cocinero::detener()
+{
+    activo = false;
+    if (hiloCocina.joinable())
+        hiloCocina.join();
+}
+
+void Cocinero::cicloCocina()
+{
+    try
+    {
+        while (activo)
+        {
+            // Consumir pedidos de la cola
+            auto pedido = this->sistema->procesarSiguientePedidoInterno();
+            if (pedido)
+            {
+                std::cout << "[COCINERO] " << this->getNombre() << " cocinando Pedido #" << pedido->getId() << "..." << std::endl;
+                // this->sistema->notificarObservadores();
+                pedido->setEstado("EN_PREPARACION");
+                std::this_thread::sleep_for(std::chrono::seconds(2)); // Simula tiempo de cocina
+                pedido->setEstado("LISTO");
+                std::cout << "[COCINERO] Pedido #" << pedido->getId() << " listo!" << std::endl;
+                // Notificar al sistema que el pedido ha sido terminado
+                sistema->notificarPedidoTerminado(pedido);
+            }
+            else
+            {
+                // Si no hay pedidos, dormir un poco antes de volver a intentar
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            }
+        }
+    }
+    catch (const std::exception &e)
+    {
+        std::cout << "[COCINERO] Hilo finalizado: " << e.what() << std::endl;
+    }
+}
 
 void Cocinero::mostrarInfo() const
 {
@@ -25,16 +73,32 @@ void Cocinero::actualizar(const Pedido *pedido)
 void Cocinero::cocinarSiguientePedido()
 {
     // Cocinero como "Consumidor de Pedidos"
-    Pedido *pedido = this->sistema->procesarSiguientePedido();
+    auto pedido = this->sistema->procesarSiguientePedidoInterno();
 
     // Responsabilidad de procesar el pedido
-    if (pedido != nullptr)
+    if (pedido)
     {
         std::cout << "[COCINERO] " << this->getNombre() << " cocinando Pedido #" << pedido->getId() << "..." << std::endl;
         // Simular tiempo de cocina
         // std::this_thread::sleep_for(std::chrono::seconds(2));
         pedido->setEstado("COMPLETADO");
         std::cout << "[COCINERO] Pedido #" << pedido->getId() << " listo!" << std::endl;
-        delete pedido; // Liberar memoria despues de procesar
+        sistema->notificarPedidoTerminado(pedido);
     }
+}
+
+// Métodos de IObservadorCore (stubs)
+void Cocinero::onNuevosPedidosEnCola()
+{
+    std::cout << "[Cocinero] Notificado: Hay nuevos pedidos en cola." << std::endl;
+}
+
+void Cocinero::onPedidoTerminado(int id_pedido)
+{
+    std::cout << "[Cocinero] Notificado: Pedido terminado, id=" << id_pedido << std::endl;
+}
+
+void Cocinero::onError(const std::string &mensaje)
+{
+    std::cout << "[Cocinero] Error: " << mensaje << std::endl;
 }

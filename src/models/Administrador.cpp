@@ -17,8 +17,9 @@ void Administrador::mostrarInfo() const
 void Administrador::actualizar(const Pedido *pedido)
 {
     // Actualizar stats al notificar un pedido
-    for (const ItemPedido *item : pedido->getItems())
+    for (const auto &itemPtr : pedido->getItems())
     {
+        const ItemPedido *item = itemPtr.get();
         ventasPorProducto[item->getProducto()->getNombre()] += item->getCantidad();
     }
 }
@@ -38,4 +39,20 @@ void Administrador::mostrarEstadisticasVentas() const
         }
     }
     std::cout << "--------------------------------------" << std::endl;
+}
+
+// Métodos de IObservadorCore (stubs)
+void Administrador::onNuevosPedidosEnCola()
+{
+    std::cout << "[Administrador] Notificado: Hay nuevos pedidos en cola." << std::endl;
+}
+
+void Administrador::onPedidoTerminado(int id_pedido)
+{
+    std::cout << "[Administrador] Notificado: Pedido terminado, id=" << id_pedido << std::endl;
+}
+
+void Administrador::onError(const std::string &mensaje)
+{
+    std::cout << "[Administrador] Error: " << mensaje << std::endl;
 }

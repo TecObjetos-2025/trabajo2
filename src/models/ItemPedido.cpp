@@ -1,8 +1,9 @@
 #include "models/ItemPedido.h"
 
 // Ahora se recibe puntero
-ItemPedido::ItemPedido(const Producto *producto, int cantidad)
-    : producto(producto), cantidad(cantidad) {}
+
+ItemPedido::ItemPedido(std::shared_ptr<Producto> producto, int cantidad)
+    : producto(std::move(producto)), cantidad(cantidad) {}
 
 double ItemPedido::getSubtotal() const
 {
@@ -14,10 +15,10 @@ double ItemPedido::getSubtotal() const
 }
 
 // Getters
+
 int ItemPedido::getCantidad() const
 {
     return cantidad;
 }
 
-// Devolver la referencia del Producto
-const Producto *ItemPedido::getProducto() const { return producto; }
+std::shared_ptr<Producto> ItemPedido::getProducto() const { return producto; }

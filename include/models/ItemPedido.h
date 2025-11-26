@@ -2,19 +2,20 @@
 #define ITEMPEDIDO_H
 
 #include "Producto.h"
+#include <memory>
 
 class ItemPedido
 {
 private:
-    const Producto *producto; // <- Cambiado a puntero
+    std::shared_ptr<Producto> producto;
     int cantidad;
 
 public:
-    ItemPedido(const Producto *producto, int cantidad);
+    ItemPedido(std::shared_ptr<Producto> producto, int cantidad);
 
-    const Producto *getProducto() const;
+    std::shared_ptr<Producto> getProducto() const;
     int getCantidad() const;
-    double getSubtotal() const; // Calcula precio * cantidad
+    double getSubtotal() const;
 };
 
 #endif // ITEMPEDIDO_H

@@ -3,7 +3,8 @@
 
 #include <vector>
 #include <string>
-#include "Cola.h"
+#include <memory>
+#include "ColaThreadSafe.h"
 
 class Persona;
 class Pedido;
@@ -11,52 +12,57 @@ class Producto;
 class Observador;
 class MenuCafeteria;
 
-class SistemaPedidos
+#include "api/ICoreSistema.h"
+#include "api/IObservadorCore.h"
+
+class SistemaPedidos : public ICoreSistema
 {
+public:
+    void cerrarColaPedidos() { pedidos_en_espera.cerrar(); }
+
 private:
-    MenuCafeteria *menu;
-    std::vector<Persona *> personas;
-    // std::vector<Pedido *> pedidos;
-    Cola<Pedido *> pedidos_en_espera; // <- Cambio a Cola de punteros (FIFO)
-    std::vector<Observador *> observadores;
-    std::vector<Producto *> productos;
+    std::unique_ptr<MenuCafeteria> menu;
+    std::vector<std::shared_ptr<Persona>> personas;
+    ColaThreadSafe<std::shared_ptr<Pedido>> pedidos_en_espera;
+    std::vector<std::shared_ptr<IObservadorCore>> observadores;
+    std::vector<std::shared_ptr<Producto>> productos;
 
     int proximoIdPersona = 1;
 
 public:
-    SistemaPedidos(); // Constructor
+    // Satisface la interfaz ICoreSistema
+    void registrarObservador(IObservadorCore *observador) override;
+    SistemaPedidos();
+    ~SistemaPedidos();
 
-    ~SistemaPedidos(); // <- Manejo de memoria en el destructor
-
-    // Mejora de delegacion
+    // Delegación y gestión
     void mostrarMenu() const;
-
-    void registrarPersona(Persona *persona);
+    void registrarPersona(std::shared_ptr<Persona> persona);
     Persona *buscarPersonaPorId(int id);
     void mostrarTodasLasPersonas() const;
-
-    void inicializarMenu(); // Para agregar productos de ejemplo
-
-    // Pedido &crearPedido(Cliente &cliente);
+    void inicializarMenu();
     void agregarProductoAPedido(Pedido &pedido, int idProducto, int cantidad);
+    void agregarProducto(std::shared_ptr<Producto> producto);
+    void finalizarPedido(std::shared_ptr<Pedido> pedido);
 
-    void agregarProducto(Producto *producto);
+    // Métodos Observer API
+    void registrarObservador(std::shared_ptr<IObservadorCore> observador);
+    void removerObservador(IObservadorCore *observador) override;
+    void notificarObservadores(const Pedido *pedido); // Interno
 
-    /**
-     * @brief Actuar como "Procesador de Pedidos": agregar un nuevo pedido a la cola
-     */
-    void finalizarPedido(Pedido *pedido);
+    // Métodos API
+    std::vector<InfoProducto> getMenu() override;
+    std::vector<InfoDescuento> getDescuentosDisponibles() override;
+    void finalizarPedido(const std::string &cliente,
+                         const std::vector<ItemPedidoCrear> &items,
+                         const std::string &id_descuentos) override;
+    std::vector<InfoPedido> getPedidosEnCola() override;
+    void procesarSiguientePedido() override;
 
-    // Métodos del patrón Observer
-    void agregarObservador(Observador *obs);
-    void notificarObservadores(const Pedido *pedido);
-
-    /**
-     * @brief Metodo para actuar como "Consumidor de Pedidos": procesar el siguiente pedido en la cola
-     */
-    Pedido *procesarSiguientePedido(); // <- NUEVO
-
-    void mostrarPedidosEnEspera() const; // <- NUEVO
+    // Otros
+    std::shared_ptr<Pedido> procesarSiguientePedidoInterno();
+    void notificarPedidoTerminado(const std::shared_ptr<Pedido> &pedido);
+    void mostrarPedidosEnEspera() const;
 };
 
 #endif // SISTEMAPEDIDOS_H

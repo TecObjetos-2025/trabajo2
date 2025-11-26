@@ -1,8 +1,10 @@
 #ifndef PEDIDO_H
 #define PEDIDO_H
 
+#include <iostream>
 #include <vector>
 #include <string>
+#include <memory>
 
 class Cliente;
 class ItemPedido;
@@ -12,25 +14,35 @@ class Pedido
 {
 private:
     int id;
-    const Cliente *cliente;          // Asociado a un cliente
-    std::vector<ItemPedido *> items; // <- Nuevo: Vector de punteros
-    std::string estado;              // Por ejemplo: "EN_PROCESO", "COMPLETADO"
+    std::weak_ptr<Cliente> cliente;
+    std::vector<std::unique_ptr<ItemPedido>> items;
+    std::string estado;
 
 public:
-    static const double IGV; // Variable de clase
+    static const double IGV;
 
-    Pedido(int id, const Cliente *cliente);
-    ~Pedido(); // <- Nuevo para liberar memoria
+    Pedido(int id, std::shared_ptr<Cliente> cliente);
+    ~Pedido();
 
     int getId() const;
-    const Cliente *getCliente() const; // Devuelve el puntero ahora
-    const std::vector<ItemPedido *> &getItems() const;
+    std::shared_ptr<Cliente> getCliente() const;
+    const std::vector<std::unique_ptr<ItemPedido>> &getItems() const;
     std::string getEstado() const;
 
-    void agregarItem(const Producto *producto, int cantidad);
+    void agregarItem(std::shared_ptr<Producto> producto, int cantidad);
     double calcularTotal() const;
     void setEstado(const std::string &nuevoEstado);
     void marcarComoPagado();
+
+    friend std::ostream &operator<<(std::ostream &os, const Pedido &pedido)
+    {
+        // Simplificado para mostrar info basica
+        os << "Pedido ID: " << pedido.id;
+
+        // Para Debug mas adelante
+        // os << "Pedido ID: " << pedido.id << ", Estado: " << pedido.estado << ", Total: $" << pedido.calcularTotal();
+        return os;
+    }
 };
 
 #endif // PEDIDO_H
