@@ -32,11 +32,22 @@ void Cocinero::cicloCocina()
             auto pedido = this->sistema->procesarSiguientePedidoInterno();
             if (pedido)
             {
-                std::cout << "[COCINERO] " << this->getNombre() << " cocinando Pedido #" << pedido->getId() << "..." << std::endl;
+                std::cout << "[COCINERO] " << this->getNombre() << " cocinando Pedido #"
+                          << pedido->getId() << "..." << std::endl;
                 // this->sistema->notificarObservadores();
-                pedido->setEstado("EN_PREPARACION");
+
+                // === MODIFICACIÓN PARA PATRÓN STATE ===
+                // Transición 1: Pagado -> En Preparación
+                pedido->avanzar();
+                // Antes: pedido->setEstado("EN_PREPARACION");
+
                 std::this_thread::sleep_for(std::chrono::seconds(2)); // Simula tiempo de cocina
-                pedido->setEstado("LISTO");
+
+                // Transición 2: En Preparación -> Listo
+                pedido->avanzar();
+                // Antes: pedido->setEstado("LISTO");
+                // ======================================
+
                 std::cout << "[COCINERO] Pedido #" << pedido->getId() << " listo!" << std::endl;
                 // Notificar al sistema que el pedido ha sido terminado
                 sistema->notificarPedidoTerminado(pedido);
@@ -78,10 +89,17 @@ void Cocinero::cocinarSiguientePedido()
     // Responsabilidad de procesar el pedido
     if (pedido)
     {
-        std::cout << "[COCINERO] " << this->getNombre() << " cocinando Pedido #" << pedido->getId() << "..." << std::endl;
+        std::cout << "[COCINERO] " << this->getNombre() << " cocinando Pedido #"
+                  << pedido->getId() << "..." << std::endl;
         // Simular tiempo de cocina
         // std::this_thread::sleep_for(std::chrono::seconds(2));
-        pedido->setEstado("COMPLETADO");
+
+        // === MODIFICACIÓN PARA PATRÓN STATE ===
+        // Reemplazamos setEstado("COMPLETADO") por las transiciones Pagado -> En Preparación -> Listo
+        pedido->avanzar(); // Pagado -> En Preparación
+        pedido->avanzar(); // En Preparación -> Listo
+        // ======================================
+
         std::cout << "[COCINERO] Pedido #" << pedido->getId() << " listo!" << std::endl;
         sistema->notificarPedidoTerminado(pedido);
     }

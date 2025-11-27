@@ -6,9 +6,15 @@
 #include <string>
 #include <memory>
 
+// ==========================================
+// NUEVO INCLUDE NECESARIO para el Patrón State
+#include "../core/EstadoPedido.h" 
+// ==========================================
+
 class Cliente;
 class ItemPedido;
 class Producto;
+// Ya no es necesario 'class EstadoPedido;' porque el .h ya está incluido arriba
 
 class Pedido
 {
@@ -16,31 +22,51 @@ private:
     int id;
     std::weak_ptr<Cliente> cliente;
     std::vector<std::unique_ptr<ItemPedido>> items;
-    std::string estado;
+    
+    // =================================================================
+    // CAMBIO CLAVE 1: El estado ya no es un string, sino un puntero 
+    // al objeto de estado (que es polimórfico).
+    std::shared_ptr<EstadoPedido> estadoActual;
+    // La variable anterior: // std::string estado;  <-- ELIMINADA
+    // =================================================================
 
 public:
     static const double IGV;
 
-    Pedido(int id, std::shared_ptr<Cliente> cliente);
+    // Constructor sigue igual, pero la implementación inicializa el estadoActual
+    Pedido(int id, std::shared_ptr<Cliente> cliente); 
     ~Pedido();
 
     int getId() const;
     std::shared_ptr<Cliente> getCliente() const;
     const std::vector<std::unique_ptr<ItemPedido>> &getItems() const;
-    std::string getEstado() const;
+    
+    // =================================================================
+    // CAMBIO CLAVE 2: Eliminamos getEstado() y lo reemplazamos por el 
+    // nombre del estado actual (delegando al objeto de estado).
+    // Antes: // std::string getEstado() const; 
+    std::string getEstadoNombre() const;
+    // =================================================================
 
+    // =================================================================
+    // CAMBIO CLAVE 3: Los métodos de acción ahora DELEGAN en el objeto de estado.
+    void avanzar(); 
+    void cancelar(); 
+
+    // MÉTODO AUXILIAR: Permite que las clases Estado (los estados concretos) 
+    // cambien el estado (Contexto) del pedido.
+    void setEstado(std::shared_ptr<EstadoPedido> nuevoEstado); 
+    
+    // El método setEstado(const std::string &nuevoEstado) ha sido eliminado.
     void agregarItem(std::shared_ptr<Producto> producto, int cantidad);
     double calcularTotal() const;
-    void setEstado(const std::string &nuevoEstado);
     void marcarComoPagado();
 
     friend std::ostream &operator<<(std::ostream &os, const Pedido &pedido)
     {
-        // Simplificado para mostrar info basica
-        os << "Pedido ID: " << pedido.id;
-
-        // Para Debug mas adelante
-        // os << "Pedido ID: " << pedido.id << ", Estado: " << pedido.estado << ", Total: $" << pedido.calcularTotal();
+        // Sugerencia: Usar getEstadoNombre() para el debug si lo necesitas:
+        // os << "Pedido ID: " << pedido.id << ", Estado: " << pedido.getEstadoNombre();
+        os << "Pedido ID: " << pedido.id; 
         return os;
     }
 };
