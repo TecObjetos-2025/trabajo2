@@ -7,4 +7,5 @@ class DescuentoPorcentaje : public IEstrategiaDescuento
 public:
     explicit DescuentoPorcentaje(double porcentaje_);
     double aplicarDescuento(double precioBase) const override;
+    std::string getDescripcion() const override;
 };

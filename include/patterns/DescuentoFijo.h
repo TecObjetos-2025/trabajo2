@@ -8,4 +8,5 @@ class DescuentoFijo : public IEstrategiaDescuento
 public:
     explicit DescuentoFijo(double descuento_);
     double aplicarDescuento(double precioBase) const override;
+    std::string getDescripcion() const override;
 };

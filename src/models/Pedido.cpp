@@ -3,7 +3,8 @@
 #include "models/Cliente.h"
 #include "models/ItemPedido.h"
 #include "models/EstadoEnCola.h" // Estado inicial del pedido
-#include <iostream>              // Para mensajes informativos de transición de estado
+#include "patterns/DescuentoNulo.h"
+#include <iostream>
 
 // Valor del IGV aplicado a los pedidos
 const double Pedido::IGV = 0.18;
@@ -15,9 +16,14 @@ const double Pedido::IGV = 0.18;
  * @param cliente Cliente asociado al pedido
  */
 Pedido::Pedido(int id, std::shared_ptr<Cliente> cliente)
-    : id(id), cliente(cliente)
+    : id(id), cliente(cliente), estrategiaDescuento(std::make_unique<DescuentoNulo>())
 {
-    // Inicializa el estado al primer estado concreto (En Cola)
+    this->estadoActual = EstadoEnCola::getInstance();
+}
+
+Pedido::Pedido(int id, std::shared_ptr<Cliente> cliente, std::unique_ptr<IEstrategiaDescuento> estrategia)
+    : id(id), cliente(cliente), estrategiaDescuento(std::move(estrategia))
+{
     this->estadoActual = EstadoEnCola::getInstance();
 }
 
@@ -47,7 +53,21 @@ double Pedido::calcularTotal() const
     {
         subtotal += item->getSubtotal();
     }
-    return subtotal * (1 + IGV);
+    double totalConIGV = subtotal * (1 + IGV);
+    if (estrategiaDescuento)
+        return estrategiaDescuento->aplicarDescuento(totalConIGV);
+    else
+        return totalConIGV;
+}
+
+void Pedido::setEstrategiaDescuento(std::unique_ptr<IEstrategiaDescuento> estrategia)
+{
+    estrategiaDescuento = std::move(estrategia);
+}
+
+IEstrategiaDescuento *Pedido::getEstrategiaDescuento() const
+{
+    return estrategiaDescuento.get();
 }
 
 // Getters
