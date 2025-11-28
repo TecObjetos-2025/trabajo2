@@ -136,16 +136,20 @@ void SistemaPedidos::agregarProductoAPedido(Pedido &pedido, int idProducto, int 
         if (productoPtr)
         {
             pedido.agregarItem(productoPtr, cantidad);
-            std::cout << "Se agregaron " << cantidad << "x " << productoRaw->getNombre() << " al pedido." << std::endl;
+            std::cout << "Se agregaron " << cantidad << "x "
+                      << productoRaw->getNombre()
+                      << " al pedido." << std::endl;
         }
         else
         {
-            std::cout << "Error: Producto con ID " << idProducto << " no gestionado por el sistema." << std::endl;
+            std::cout << "Error: Producto con ID " << idProducto
+                      << " no gestionado por el sistema." << std::endl;
         }
     }
     else
     {
-        std::cout << "Hubo un error: Producto con ID " << idProducto << " no encontrado en el menu." << std::endl;
+        std::cout << "Hubo un error: Producto con ID "
+                  << idProducto << " no encontrado en el menu." << std::endl;
     }
 }
 
@@ -166,7 +170,8 @@ void SistemaPedidos::finalizarPedido(std::shared_ptr<Pedido> pedido)
                   << " finalizado y marcado como PAGADO." << std::endl;
 
         // Agregar a la cola de pedidos en espera (NUEVO)
-        std::cout << "[SISTEMA] Pedido #" << pedido->getId() << " agregado a la cola de pedidos en espera." << std::endl;
+        std::cout << "[SISTEMA] Pedido #" << pedido->getId()
+                  << " agregado a la cola de pedidos en espera." << std::endl;
         pedidos_en_espera.push(pedido);
 
         std::cout << "Notificando..." << std::endl;
@@ -183,8 +188,14 @@ void SistemaPedidos::registrarObservador(std::shared_ptr<IObservadorCore> observ
 
 void SistemaPedidos::removerObservador(IObservadorCore *observador)
 {
-    auto it = std::find_if(observadores.begin(), observadores.end(), [observador](const std::shared_ptr<IObservadorCore> &ptr)
-                           { return ptr.get() == observador; });
+    auto it = std::find_if(
+        observadores.begin(),
+        observadores.end(),
+        [observador](const std::shared_ptr<IObservadorCore> &ptr)
+        {
+            return ptr.get() == observador;
+        });
+
     if (it != observadores.end())
     {
         observadores.erase(it);
@@ -200,14 +211,18 @@ void SistemaPedidos::registrarObservador(IObservadorCore *observador)
 
 void SistemaPedidos::notificarObservadores(const Pedido *pedido)
 {
-    std::cout << "\n[SISTEMA] Notificando a " << observadores.size() << " observador(es) (API)..." << std::endl;
+    std::cout << "\n[SISTEMA] Notificando a "
+              << observadores.size()
+              << " observador(es) (API)..."
+              << std::endl;
+
     for (const auto &obs : observadores)
     {
         if (pedido && obs)
-            obs->onNuevosPedidosEnCola(); // Ejemplo: notificar cambio en la cola
-        // Se pueden agregar más notificaciones según el evento
-    }
+            obs->onNuevosPedidosEnCola();
+    } // Ejemplo: notificar cambio en la cola
 }
+
 // Métodos de ICoreSistema (API)
 std::vector<InfoProducto> SistemaPedidos::getMenu()
 {
@@ -225,16 +240,15 @@ std::vector<InfoProducto> SistemaPedidos::getMenu()
 
 std::vector<InfoDescuento> SistemaPedidos::getDescuentosDisponibles()
 {
-    // TODO: Implementar lógica real
     return std::vector<InfoDescuento>{};
 }
 
-void SistemaPedidos::finalizarPedido(const std::string &cliente,
-                                     const std::vector<ItemPedidoCrear> &items,
-                                     const std::string &id_descuentos)
+void SistemaPedidos::finalizarPedido(
+    const std::string &cliente,
+    const std::vector<ItemPedidoCrear> &items,
+    const std::string &id_descuentos)
 {
     // TODO: Crear pedido, agregar a cola y notificar
-    // Por ahora, solo notifica
     notificarObservadores(nullptr);
 }
 
@@ -242,13 +256,19 @@ std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
 {
     std::vector<InfoPedido> pedidosDTO;
     std::deque<std::shared_ptr<Pedido>> snapshot = pedidos_en_espera.snapshot();
+
     for (const auto &pedido : snapshot)
     {
         InfoPedido dto;
         dto.id_pedido = pedido->getId();
-        dto.cliente = pedido->getCliente() ? pedido->getCliente()->getNombre() : "";
-        dto.estado = pedido->getEstado();
+        dto.cliente = pedido->getCliente()
+                          ? pedido->getCliente()->getNombre()
+                          : "";
+
+        dto.estado = pedido->getEstadoNombre();
+
         dto.total_final = pedido->calcularTotal();
+
         for (const auto &itemPtr : pedido->getItems())
         {
             const ItemPedido *item = itemPtr.get();
@@ -256,16 +276,14 @@ std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
         }
         pedidosDTO.push_back(dto);
     }
+
     return pedidosDTO;
 }
 
 void SistemaPedidos::procesarSiguientePedido()
-{
-    // TODO: Procesar pedido y notificar
+{ // TODO: Procesar pedido y notificar
     notificarObservadores(nullptr);
 }
-
-// Implementacion Practica 5: Procesar el siguiente pedido en la cola
 
 /**
  * @brief Implementacion del "Consumidor" (Cocinero).
@@ -274,25 +292,36 @@ void SistemaPedidos::procesarSiguientePedido()
 std::shared_ptr<Pedido> SistemaPedidos::procesarSiguientePedidoInterno()
 {
     std::cout << "\n[COCINERO] Buscando nuevo pedido en la cola..." << std::endl;
+
     try
     {
         auto pedidoProcesadoPtr = pedidos_en_espera.pop();
+
         if (pedidoProcesadoPtr)
         {
-            std::cout << "[COCINERO] ...Pedido #" << pedidoProcesadoPtr->getId() << " listo para ser procesado." << std::endl;
+            std::cout << "[COCINERO] ...Pedido #"
+                      << pedidoProcesadoPtr->getId()
+                      << " listo para ser procesado."
+                      << std::endl;
         }
+
         return pedidoProcesadoPtr;
     }
     catch (const std::runtime_error &e)
     {
-        std::cout << "[COCINERO] No hay pedidos en espera para procesar." << std::endl;
+        std::cout << "[COCINERO] No hay pedidos en espera para procesar."
+                  << std::endl;
         return nullptr;
     }
 }
 
 void SistemaPedidos::notificarPedidoTerminado(const std::shared_ptr<Pedido> &pedido)
 {
-    std::cout << "[SISTEMA] Notificando que el pedido #" << (pedido ? pedido->getId() : -1) << " ha sido terminado..." << std::endl;
+    std::cout << "[SISTEMA] Notificando que el pedido #"
+              << (pedido ? pedido->getId() : -1)
+              << " ha sido terminado..."
+              << std::endl;
+
     for (const auto &obs : observadores)
     {
         if (obs && pedido)
@@ -305,9 +334,11 @@ void SistemaPedidos::notificarPedidoTerminado(const std::shared_ptr<Pedido> &ped
  */
 void SistemaPedidos::mostrarPedidosEnEspera() const
 {
-    std::cout << "\n --- ESTADO ACTUAL DE LA COLA DE PEDIDOS EN ESPERA --- " << std::endl;
-    // Mostrar elementos de la cola thread-safe
+    std::cout << "\n --- ESTADO ACTUAL DE LA COLA DE PEDIDOS EN ESPERA --- "
+              << std::endl;
+
     pedidos_en_espera.mostrar();
+
     std::cout << "----------------------------------------------------- \n"
               << std::endl;
 }

@@ -32,11 +32,18 @@ void Cocinero::cicloCocina()
             auto pedido = this->sistema->procesarSiguientePedidoInterno();
             if (pedido)
             {
-                std::cout << "[COCINERO] " << this->getNombre() << " cocinando Pedido #" << pedido->getId() << "..." << std::endl;
+                std::cout << "[COCINERO] " << this->getNombre() << " cocinando Pedido #"
+                          << pedido->getId() << "..." << std::endl;
                 // this->sistema->notificarObservadores();
-                pedido->setEstado("EN_PREPARACION");
+
+                // De estado "EN_COLA" a "EN_PREPARACION"
+                pedido->avanzar();
+
                 std::this_thread::sleep_for(std::chrono::seconds(2)); // Simula tiempo de cocina
-                pedido->setEstado("LISTO");
+
+                // DE estado "EN_PREPARACION" a "LISTO"
+                pedido->avanzar();
+
                 std::cout << "[COCINERO] Pedido #" << pedido->getId() << " listo!" << std::endl;
                 // Notificar al sistema que el pedido ha sido terminado
                 sistema->notificarPedidoTerminado(pedido);
@@ -78,10 +85,15 @@ void Cocinero::cocinarSiguientePedido()
     // Responsabilidad de procesar el pedido
     if (pedido)
     {
-        std::cout << "[COCINERO] " << this->getNombre() << " cocinando Pedido #" << pedido->getId() << "..." << std::endl;
+        std::cout << "[COCINERO] " << this->getNombre() << " cocinando Pedido #"
+                  << pedido->getId() << "..." << std::endl;
         // Simular tiempo de cocina
         // std::this_thread::sleep_for(std::chrono::seconds(2));
-        pedido->setEstado("COMPLETADO");
+
+        pedido->avanzar(); // En Cola -> En Preparación
+        pedido->avanzar(); // En Preparación -> Listo
+        // ======================================
+
         std::cout << "[COCINERO] Pedido #" << pedido->getId() << " listo!" << std::endl;
         sistema->notificarPedidoTerminado(pedido);
     }
