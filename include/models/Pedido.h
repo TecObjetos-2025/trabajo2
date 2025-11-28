@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include "patterns/IEstrategiaDescuento.h"
 
 // Implementación del patrón State para la gestión dinámica de estados de Pedido.
 #include "core/EstadoPedido.h"
@@ -31,6 +32,8 @@ private:
      */
     std::shared_ptr<EstadoPedido> estadoActual;
 
+    std::unique_ptr<IEstrategiaDescuento> estrategiaDescuento; ///< Estrategia de descuento (Strategy)
+
 public:
     static const double IGV;
 
@@ -40,6 +43,7 @@ public:
      * @param cliente Cliente asociado al pedido
      */
     Pedido(int id, std::shared_ptr<Cliente> cliente);
+    Pedido(int id, std::shared_ptr<Cliente> cliente, std::unique_ptr<IEstrategiaDescuento> estrategia);
     ~Pedido();
 
     int getId() const;
@@ -74,6 +78,10 @@ public:
     void agregarItem(std::shared_ptr<Producto> producto, int cantidad);
     double calcularTotal() const;
     void marcarComoPagado();
+
+    // Métodos para el patrón Strategy
+    void setEstrategiaDescuento(std::unique_ptr<IEstrategiaDescuento> estrategia);
+    IEstrategiaDescuento *getEstrategiaDescuento() const;
 
     /**
      * @brief Sobrecarga del operador de salida para depuración

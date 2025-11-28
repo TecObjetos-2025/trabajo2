@@ -9,6 +9,9 @@
 #include "models/Administrador.h"
 #include "models/Producto.h"
 #include "models/Pedido.h"
+#include "patterns/DescuentoNulo.h"
+#include "patterns/DescuentoPorcentaje.h"
+#include "patterns/DescuentoFijo.h"
 
 int main()
 {
@@ -88,45 +91,8 @@ int main()
         ptrAdmin->mostrarEstadisticasVentas();
     }
 
-    // --- PRUEBAS DE LA API/FACHADA ---
-    std::cout << "\n--- PRUEBAS DE LA API/FACHADA ---" << std::endl;
+    sistema.cerrarColaPedidos(); // Cerrar la cola para terminar el hilo del cocinero
 
-    // Mostrar menú limpio (DTO)
-    std::vector<InfoProducto> menuDTO = sistema.getMenu();
-    std::cout << "\n[API] Menu disponible:" << std::endl;
-    for (const auto &prod : menuDTO)
-    {
-        std::cout << "  - " << prod.id << ": " << prod.nombre << " ($" << prod.precio << ")" << std::endl;
-    }
-
-    // Mostrar descuentos disponibles
-    std::vector<InfoDescuento> descuentosDTO = sistema.getDescuentosDisponibles();
-    std::cout << "\n[API] Descuentos disponibles:" << std::endl;
-    for (const auto &desc : descuentosDTO)
-    {
-        std::cout << "  - " << desc.id_descuento << ": " << desc.descripcion << std::endl;
-    }
-    if (descuentosDTO.empty())
-        std::cout << "  (Ninguno)" << std::endl;
-
-    // Mostrar pedidos en cola (stub/documentado)
-    std::vector<InfoPedido> pedidosDTO = sistema.getPedidosEnCola();
-    std::cout << "\n[API] Pedidos en cola:" << std::endl;
-    for (const auto &pedido : pedidosDTO)
-    {
-        std::cout << "  - Pedido #" << pedido.id_pedido << " de " << pedido.cliente << " (" << pedido.estado << ")" << std::endl;
-        for (const auto &item : pedido.items)
-        {
-            std::cout << "      * " << item.cantidad << "x " << item.nombreProducto << " ($" << item.precioUnitario << ")" << std::endl;
-        }
-        std::cout << "    Total: $" << pedido.total_final << std::endl;
-    }
-    if (pedidosDTO.empty())
-        std::cout << "  (Ninguno o pendiente de refactorización de Cola)" << std::endl;
-
-    // Cerrar la cola y detener hilo del cocinero antes de terminar
-    // (Evita que el hilo quede bloqueado si la app se cierra)
-    sistema.cerrarColaPedidos();
     if (ptrCocinero)
     {
         try
@@ -135,11 +101,27 @@ int main()
         }
         catch (const std::exception &e)
         {
-            std::cout << "[MAIN] Hilo cocinero terminado por cierre de cola: " << e.what() << std::endl;
+            std::cerr << "Error al detener el cocinero: " << e.what() << std::endl;
         }
     }
 
-    std::cout << "\n--- FIN ---" << std::endl;
+    // --- DEMO STRATEGY
+    std::cout << "\n--- DEMO STRATEGY: Descuentos dinámicos en Pedido ---" << std::endl;
+    auto pedidoDemo = std::make_shared<Pedido>(2001, cliente1);
+    pedidoDemo->agregarItem(prod1, 2); // 2x Café Americano
+    pedidoDemo->agregarItem(prod2, 1); // 1x Pan con Chicharrón
+
+    // Sin descuento (DescuentoNulo)
+    pedidoDemo->setEstrategiaDescuento(std::make_unique<DescuentoNulo>());
+    std::cout << "Total sin descuento: $" << pedidoDemo->calcularTotal() << std::endl;
+
+    // Descuento porcentual (10%)
+    pedidoDemo->setEstrategiaDescuento(std::make_unique<DescuentoPorcentaje>(0.10));
+    std::cout << "Total con 10% descuento: $" << pedidoDemo->calcularTotal() << std::endl;
+
+    // Descuento fijo ($5.00)
+    pedidoDemo->setEstrategiaDescuento(std::make_unique<DescuentoFijo>(5.00));
+    std::cout << "Total con descuento fijo de $5.00: $" << pedidoDemo->calcularTotal() << std::endl;
 
     return 0;
 }

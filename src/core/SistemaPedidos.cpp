@@ -10,6 +10,9 @@
 #include <iostream>
 #include <stdexcept> // Capturar excepciones en la Cola
 #include <algorithm> // Para std::find
+#include "patterns/DescuentoNulo.h"
+#include "patterns/DescuentoPorcentaje.h"
+#include "patterns/DescuentoFijo.h"
 
 // Función auxiliar para convertir ItemPedido a ItemPedidoInfo
 static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
@@ -240,7 +243,13 @@ std::vector<InfoProducto> SistemaPedidos::getMenu()
 
 std::vector<InfoDescuento> SistemaPedidos::getDescuentosDisponibles()
 {
-    return std::vector<InfoDescuento>{};
+    std::vector<InfoDescuento> descuentos;
+    descuentos.push_back({"nulo", "Sin descuento"});
+    descuentos.push_back({"porcentaje_10", "Descuento del 10%"});
+    descuentos.push_back({"porcentaje_20", "Descuento del 20%"});
+    descuentos.push_back({"fijo_5", "Descuento fijo de $5"});
+    descuentos.push_back({"fijo_10", "Descuento fijo de $10"});
+    return descuentos;
 }
 
 void SistemaPedidos::finalizarPedido(
@@ -248,8 +257,70 @@ void SistemaPedidos::finalizarPedido(
     const std::vector<ItemPedidoCrear> &items,
     const std::string &id_descuentos)
 {
-    // TODO: Crear pedido, agregar a cola y notificar
-    notificarObservadores(nullptr);
+    // Buscar cliente
+    std::shared_ptr<Cliente> clientePtr = nullptr;
+    for (const auto &p : personas)
+    {
+        clientePtr = std::dynamic_pointer_cast<Cliente>(p);
+        if (clientePtr && clientePtr->getNombre() == cliente)
+            break;
+        clientePtr = nullptr;
+    }
+    if (!clientePtr)
+    {
+        std::cout << "[API] Cliente no encontrado: " << cliente << std::endl;
+        notificarObservadores(nullptr);
+        return;
+    }
+
+    // Crear pedido
+    auto pedido = std::make_shared<Pedido>(9999, clientePtr); // ID dummy, puedes mejorar esto
+    for (const auto &item : items)
+    {
+        const Producto *prodRaw = menu->getProductoPorId(item.productoId);
+        if (prodRaw)
+        {
+            // Buscar el shared_ptr correspondiente en productos
+            std::shared_ptr<Producto> prodPtr;
+            for (const auto &prod : productos)
+            {
+                if (prod && prod->getId() == item.productoId)
+                {
+                    prodPtr = std::shared_ptr<Producto>(prod.get(), [](Producto *) {});
+                    break;
+                }
+            }
+            if (prodPtr)
+                pedido->agregarItem(prodPtr, item.cantidad);
+        }
+    }
+
+    // Asignar estrategia de descuento
+    if (id_descuentos == "porcentaje_10")
+    {
+        pedido->setEstrategiaDescuento(std::make_unique<DescuentoPorcentaje>(0.10));
+    }
+    else if (id_descuentos == "porcentaje_20")
+    {
+        pedido->setEstrategiaDescuento(std::make_unique<DescuentoPorcentaje>(0.20));
+    }
+    else if (id_descuentos == "fijo_5")
+    {
+        pedido->setEstrategiaDescuento(std::make_unique<DescuentoFijo>(5.0));
+    }
+    else if (id_descuentos == "fijo_10")
+    {
+        pedido->setEstrategiaDescuento(std::make_unique<DescuentoFijo>(10.0));
+    }
+    else
+    {
+        pedido->setEstrategiaDescuento(std::make_unique<DescuentoNulo>());
+    }
+
+    pedido->marcarComoPagado();
+    std::cout << "[API] Pedido finalizado y marcado como PAGADO. Total: $" << pedido->calcularTotal() << std::endl;
+    pedidos_en_espera.push(pedido);
+    notificarObservadores(pedido.get());
 }
 
 std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
