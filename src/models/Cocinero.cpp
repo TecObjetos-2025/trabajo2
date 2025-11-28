@@ -36,17 +36,13 @@ void Cocinero::cicloCocina()
                           << pedido->getId() << "..." << std::endl;
                 // this->sistema->notificarObservadores();
 
-                // === MODIFICACIÓN PARA PATRÓN STATE ===
-                // Transición 1: Pagado -> En Preparación
+                // De estado "EN_COLA" a "EN_PREPARACION"
                 pedido->avanzar();
-                // Antes: pedido->setEstado("EN_PREPARACION");
 
                 std::this_thread::sleep_for(std::chrono::seconds(2)); // Simula tiempo de cocina
 
-                // Transición 2: En Preparación -> Listo
+                // DE estado "EN_PREPARACION" a "LISTO"
                 pedido->avanzar();
-                // Antes: pedido->setEstado("LISTO");
-                // ======================================
 
                 std::cout << "[COCINERO] Pedido #" << pedido->getId() << " listo!" << std::endl;
                 // Notificar al sistema que el pedido ha sido terminado
@@ -94,9 +90,7 @@ void Cocinero::cocinarSiguientePedido()
         // Simular tiempo de cocina
         // std::this_thread::sleep_for(std::chrono::seconds(2));
 
-        // === MODIFICACIÓN PARA PATRÓN STATE ===
-        // Reemplazamos setEstado("COMPLETADO") por las transiciones Pagado -> En Preparación -> Listo
-        pedido->avanzar(); // Pagado -> En Preparación
+        pedido->avanzar(); // En Cola -> En Preparación
         pedido->avanzar(); // En Preparación -> Listo
         // ======================================
 

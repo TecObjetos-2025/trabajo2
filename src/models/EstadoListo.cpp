@@ -4,16 +4,18 @@
 
 using namespace std;
 
-shared_ptr<EstadoListo> EstadoListo::getInstance() {
+shared_ptr<EstadoListo> EstadoListo::getInstance()
+{
     static shared_ptr<EstadoListo> instance(new EstadoListo());
     return instance;
 }
 
-void EstadoListo::avanzar(Pedido* pedido) {
+void EstadoListo::avanzar(Pedido *pedido)
+{
     cout << "El Pedido #" << pedido->getId() << " ya esta Listo. Esperando ser entregado." << endl;
-    // Opcional: El siguiente paso sería transicionar a un EstadoEntregado.
 }
 
-void EstadoListo::cancelar(Pedido* pedido) {
+void EstadoListo::cancelar(Pedido *pedido)
+{
     cerr << "ERROR: El Pedido #" << pedido->getId() << " ya está listo. No se puede cancelar." << endl;
 }

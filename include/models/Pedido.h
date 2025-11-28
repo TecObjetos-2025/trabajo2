@@ -6,67 +6,81 @@
 #include <string>
 #include <memory>
 
-// ==========================================
-// NUEVO INCLUDE NECESARIO para el Patrón State
-#include "../core/EstadoPedido.h" 
-// ==========================================
+// Implementación del patrón State para la gestión dinámica de estados de Pedido.
+#include "core/EstadoPedido.h"
 
 class Cliente;
 class ItemPedido;
 class Producto;
 // Ya no es necesario 'class EstadoPedido;' porque el .h ya está incluido arriba
 
+/**
+ * @brief Clase Pedido
+ * Representa un pedido realizado por un cliente en la cafetería. Utiliza el patrón State para gestionar dinámicamente el estado del pedido.
+ */
 class Pedido
 {
 private:
-    int id;
-    std::weak_ptr<Cliente> cliente;
-    std::vector<std::unique_ptr<ItemPedido>> items;
-    
-    // =================================================================
-    // CAMBIO CLAVE 1: El estado ya no es un string, sino un puntero 
-    // al objeto de estado (que es polimórfico).
+    int id;                                         ///< Identificador único del pedido
+    std::weak_ptr<Cliente> cliente;                 ///< Referencia al cliente que realizó el pedido
+    std::vector<std::unique_ptr<ItemPedido>> items; ///< Lista de ítems del pedido
+
+    /**
+     * @brief Estado actual del pedido
+     * Gestionado mediante el patrón State. Permite cambiar el comportamiento del pedido según su estado concreto.
+     */
     std::shared_ptr<EstadoPedido> estadoActual;
-    // La variable anterior: // std::string estado;  <-- ELIMINADA
-    // =================================================================
 
 public:
     static const double IGV;
 
-    // Constructor sigue igual, pero la implementación inicializa el estadoActual
-    Pedido(int id, std::shared_ptr<Cliente> cliente); 
+    /**
+     * @brief Constructor de Pedido
+     * @param id Identificador del pedido
+     * @param cliente Cliente asociado al pedido
+     */
+    Pedido(int id, std::shared_ptr<Cliente> cliente);
     ~Pedido();
 
     int getId() const;
     std::shared_ptr<Cliente> getCliente() const;
     const std::vector<std::unique_ptr<ItemPedido>> &getItems() const;
-    
-    // =================================================================
-    // CAMBIO CLAVE 2: Eliminamos getEstado() y lo reemplazamos por el 
-    // nombre del estado actual (delegando al objeto de estado).
-    // Antes: // std::string getEstado() const; 
+
+    /**
+     * @brief Obtiene el nombre del estado actual del pedido
+     * @return Nombre descriptivo del estado
+     */
     std::string getEstadoNombre() const;
-    // =================================================================
 
-    // =================================================================
-    // CAMBIO CLAVE 3: Los métodos de acción ahora DELEGAN en el objeto de estado.
-    void avanzar(); 
-    void cancelar(); 
+    /**
+     * @brief Avanza el estado del pedido según la lógica del estado actual
+     * Delegado al objeto EstadoPedido correspondiente.
+     */
+    void avanzar();
 
-    // MÉTODO AUXILIAR: Permite que las clases Estado (los estados concretos) 
-    // cambien el estado (Contexto) del pedido.
-    void setEstado(std::shared_ptr<EstadoPedido> nuevoEstado); 
-    
-    // El método setEstado(const std::string &nuevoEstado) ha sido eliminado.
+    /**
+     * @brief Cancela el pedido si el estado actual lo permite
+     * Delegado al objeto EstadoPedido correspondiente.
+     */
+    void cancelar();
+
+    /**
+     * @brief Cambia el estado actual del pedido
+     * Utilizado por los estados concretos para modificar el contexto.
+     * @param nuevoEstado Nuevo estado a asignar
+     */
+    void setEstado(std::shared_ptr<EstadoPedido> nuevoEstado);
+
     void agregarItem(std::shared_ptr<Producto> producto, int cantidad);
     double calcularTotal() const;
     void marcarComoPagado();
 
+    /**
+     * @brief Sobrecarga del operador de salida para depuración
+     */
     friend std::ostream &operator<<(std::ostream &os, const Pedido &pedido)
     {
-        // Sugerencia: Usar getEstadoNombre() para el debug si lo necesitas:
-        // os << "Pedido ID: " << pedido.id << ", Estado: " << pedido.getEstadoNombre();
-        os << "Pedido ID: " << pedido.id; 
+        os << "Pedido ID: " << pedido.id;
         return os;
     }
 };

@@ -219,7 +219,8 @@ void SistemaPedidos::notificarObservadores(const Pedido *pedido)
     for (const auto &obs : observadores)
     {
         if (pedido && obs)
-            obs->onNuevosPedidosEnCola();} // Ejemplo: notificar cambio en la cola
+            obs->onNuevosPedidosEnCola();
+    } // Ejemplo: notificar cambio en la cola
 }
 
 // Métodos de ICoreSistema (API)
@@ -239,7 +240,8 @@ std::vector<InfoProducto> SistemaPedidos::getMenu()
 
 std::vector<InfoDescuento> SistemaPedidos::getDescuentosDisponibles()
 {
-    return std::vector<InfoDescuento>{};}
+    return std::vector<InfoDescuento>{};
+}
 
 void SistemaPedidos::finalizarPedido(
     const std::string &cliente,
@@ -247,7 +249,8 @@ void SistemaPedidos::finalizarPedido(
     const std::string &id_descuentos)
 {
     // TODO: Crear pedido, agregar a cola y notificar
-    notificarObservadores(nullptr);}
+    notificarObservadores(nullptr);
+}
 
 std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
 {
@@ -262,11 +265,7 @@ std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
                           ? pedido->getCliente()->getNombre()
                           : "";
 
-        // ***************************************************************
-        // MODIFICACIÓN CLAVE: Se reemplaza getEstado() por getEstadoNombre()
-        // para compatibilidad con el Patrón State.
         dto.estado = pedido->getEstadoNombre();
-        // ***************************************************************
 
         dto.total_final = pedido->calcularTotal();
 
@@ -282,8 +281,9 @@ std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
 }
 
 void SistemaPedidos::procesarSiguientePedido()
-{// TODO: Procesar pedido y notificar
-    notificarObservadores(nullptr);}
+{ // TODO: Procesar pedido y notificar
+    notificarObservadores(nullptr);
+}
 
 /**
  * @brief Implementacion del "Consumidor" (Cocinero).
