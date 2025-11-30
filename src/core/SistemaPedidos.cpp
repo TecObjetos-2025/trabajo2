@@ -13,6 +13,7 @@
 #include "patterns/DescuentoNulo.h"
 #include "patterns/DescuentoPorcentaje.h"
 #include "patterns/DescuentoFijo.h"
+#include "core/CafeteriaFactory.h"
 
 // Función auxiliar para convertir ItemPedido a ItemPedidoInfo
 static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
