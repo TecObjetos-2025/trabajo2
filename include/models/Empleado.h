@@ -4,6 +4,10 @@
 #include "models/Persona.h"
 #include <string>
 
+/**
+ * @brief Representa a un empleado de la cafetería, derivado de Persona.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ */
 class Empleado : public Persona
 {
 protected:

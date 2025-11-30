@@ -1,3 +1,10 @@
+#/**
+#  @file SistemaPedidos.cpp
+#  @brief Implementación del sistema de gestión de pedidos para la cafetería.
+#  @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+#  @date 2025
+#  @details Este archivo contiene la lógica principal para la gestión de clientes, pedidos y notificaciones a la cocina.
+#*/
 #include "core/SistemaPedidos.h"
 #include "models/Persona.h"
 #include "models/Cliente.h"
@@ -28,6 +35,11 @@ static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
     return dto;
 }
 
+/**
+ * @brief Clase principal para la gestión de pedidos, clientes y notificaciones en la cafetería.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @details Permite registrar personas, clientes, crear pedidos y notificar observadores (patrón Observer).
+ */
 // Constructor
 SistemaPedidos::SistemaPedidos()
 {
@@ -77,6 +89,9 @@ Persona *SistemaPedidos::buscarPersonaPorId(int id)
     return nullptr;
 }
 
+/**
+ * @brief Muestra todas las personas registradas en el sistema.
+ */
 void SistemaPedidos::mostrarTodasLasPersonas() const
 {
     std::cout << "\n--- Lista de Personas Registradas ---" << std::endl;
@@ -258,66 +273,20 @@ void SistemaPedidos::finalizarPedido(
     const std::vector<ItemPedidoCrear> &items,
     const std::string &id_descuentos)
 {
-    // Buscar cliente
-    std::shared_ptr<Cliente> clientePtr = nullptr;
-    for (const auto &p : personas)
-    {
-        clientePtr = std::dynamic_pointer_cast<Cliente>(p);
-        if (clientePtr && clientePtr->getNombre() == cliente)
-            break;
-        clientePtr = nullptr;
-    }
-    if (!clientePtr)
+    // Crear pedido completo usando la Factory
+    auto pedido = CafeteriaFactory::crearPedidoCompleto(
+        proximoIdPersona++, // ID dummy, puedes mejorar esto
+        cliente,
+        items,
+        id_descuentos,
+        personas,
+        productos);
+    if (!pedido)
     {
         std::cout << "[API] Cliente no encontrado: " << cliente << std::endl;
         notificarObservadores(nullptr);
         return;
     }
-
-    // Crear pedido
-    auto pedido = CafeteriaFactory::crearPedido(9999, clientePtr); // ID dummy, puedes mejorar esto
-    for (const auto &item : items)
-    {
-        const Producto *prodRaw = menu->getProductoPorId(item.productoId);
-        if (prodRaw)
-        {
-            // Buscar el shared_ptr correspondiente en productos
-            std::shared_ptr<Producto> prodPtr;
-            for (const auto &prod : productos)
-            {
-                if (prod && prod->getId() == item.productoId)
-                {
-                    prodPtr = std::shared_ptr<Producto>(prod.get(), [](Producto *) {});
-                    break;
-                }
-            }
-            if (prodPtr)
-                pedido->agregarItem(prodPtr, item.cantidad);
-        }
-    }
-
-    // Asignar estrategia de descuento
-    if (id_descuentos == "porcentaje_10")
-    {
-        pedido->setEstrategiaDescuento(std::make_unique<DescuentoPorcentaje>(0.10));
-    }
-    else if (id_descuentos == "porcentaje_20")
-    {
-        pedido->setEstrategiaDescuento(std::make_unique<DescuentoPorcentaje>(0.20));
-    }
-    else if (id_descuentos == "fijo_5")
-    {
-        pedido->setEstrategiaDescuento(std::make_unique<DescuentoFijo>(5.0));
-    }
-    else if (id_descuentos == "fijo_10")
-    {
-        pedido->setEstrategiaDescuento(std::make_unique<DescuentoFijo>(10.0));
-    }
-    else
-    {
-        pedido->setEstrategiaDescuento(std::make_unique<DescuentoNulo>());
-    }
-
     pedido->marcarComoPagado();
     std::cout << "[API] Pedido finalizado y marcado como PAGADO. Total: $" << pedido->calcularTotal() << std::endl;
     pedidos_en_espera.push(pedido);

@@ -72,7 +72,7 @@ int main()
         std::this_thread::sleep_for(std::chrono::seconds(7));
 
         std::cout << "\n[MAIN] Verificando que la cola este vacia..." << std::endl;
-        sistema.mostrarPedidosEnEspera(); 
+        sistema.mostrarPedidosEnEspera();
         sistema.procesarSiguientePedido();
     }
 
@@ -98,14 +98,17 @@ int main()
     std::cout << "\n--- DEMO STRATEGY CON FACTORY ---" << std::endl;
     // Ultima prueba con Factory
     auto pedidoDemo = CafeteriaFactory::crearPedido(2001, cliente1);
-    pedidoDemo->agregarItem(prod1, 2); 
-    pedidoDemo->agregarItem(prod2, 1); 
+    pedidoDemo->agregarItem(prod1, 2);
+    pedidoDemo->agregarItem(prod2, 1);
 
     pedidoDemo->setEstrategiaDescuento(std::make_unique<DescuentoNulo>());
     std::cout << "Total sin descuento: $" << pedidoDemo->calcularTotal() << std::endl;
 
     pedidoDemo->setEstrategiaDescuento(std::make_unique<DescuentoPorcentaje>(0.10));
     std::cout << "Total con 10% descuento: $" << pedidoDemo->calcularTotal() << std::endl;
+
+    pedidoDemo->setEstrategiaDescuento(std::make_unique<DescuentoFijo>(5));
+    std::cout << "Total con $5 descuento fijo: $" << pedidoDemo->calcularTotal() << std::endl;
 
     return 0;
 }
