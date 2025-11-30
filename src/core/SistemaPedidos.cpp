@@ -275,7 +275,7 @@ void SistemaPedidos::finalizarPedido(
     }
 
     // Crear pedido
-    auto pedido = std::make_shared<Pedido>(9999, clientePtr); // ID dummy, puedes mejorar esto
+    auto pedido = CafeteriaFactory::crearPedido(9999, clientePtr); // ID dummy, puedes mejorar esto
     for (const auto &item : items)
     {
         const Producto *prodRaw = menu->getProductoPorId(item.productoId);
