@@ -7,6 +7,10 @@
 #include <map>
 #include <string>
 
+/**
+ * @brief Representa al administrador de la cafetería, encargado de gestionar ventas y notificaciones.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ */
 class Administrador : public Empleado, public Observador, public IObservadorCore
 {
 private:

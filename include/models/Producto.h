@@ -3,6 +3,10 @@
 
 #include <string>
 
+/**
+ * @brief Representa un producto disponible en la cafetería.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ */
 class Producto
 {
 private:

@@ -1,6 +1,7 @@
 #ifndef COCINERO_H
 #define COCINERO_H
 
+#include <thread>
 #include "models/Empleado.h"
 #include "patterns/Observador.h"
 #include "api/IObservadorCore.h"
@@ -8,7 +9,10 @@
 
 class SistemaPedidos; // Declaración adelantada
 
-// Doble herencia segun diseño previo Cocinero es un Empleado y también es un Observador
+/**
+ * @brief Representa al cocinero de la cafetería, encargado de preparar pedidos y recibir notificaciones.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ */
 class Cocinero : public Empleado, public Observador, public IObservadorCore
 {
 private:

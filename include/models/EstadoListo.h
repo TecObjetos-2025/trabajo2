@@ -3,6 +3,11 @@
 
 #include "core/EstadoPedido.h"
 
+/**
+ * @brief Estado concreto "Listo" para el patrón State de Pedido.
+ * Representa el estado donde el pedido está listo para ser entregado.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ */
 class EstadoListo : public EstadoPedido
 {
 public:

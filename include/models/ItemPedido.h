@@ -4,6 +4,10 @@
 #include "Producto.h"
 #include <memory>
 
+/**
+ * @brief Representa un ítem dentro de un pedido, asociando un producto y una cantidad.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ */
 class ItemPedido
 {
 private:

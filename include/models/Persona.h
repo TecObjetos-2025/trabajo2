@@ -3,6 +3,10 @@
 
 #include <string>
 
+/**
+ * @brief Clase base abstracta para personas en la cafetería (clientes, empleados, etc.).
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ */
 class Persona
 {
 protected:
