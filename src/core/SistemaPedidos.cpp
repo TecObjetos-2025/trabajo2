@@ -61,11 +61,18 @@ void SistemaPedidos::mostrarMenu() const
 
 void SistemaPedidos::inicializarMenu()
 {
-    menu->agregarProducto(Producto(1, "Cafe Americano", 2.50, "Bebidas"));
-    menu->agregarProducto(Producto(2, "Cafe Expresso", 3.00, "Bebidas"));
-    menu->agregarProducto(Producto(3, "Pan con Chicharron", 3.20, "Desayuno"));
-    menu->agregarProducto(Producto(4, "Cheesecake", 4.50, "Postres"));
-    menu->agregarProducto(Producto(5, "Jugo de Naranja", 2.00, "Bebidas"));
+    // Inicializa el menú y sincroniza productos
+    std::vector<Producto> nuevosProductos = {
+        Producto(1, "Cafe Americano", 2.50, "Bebidas"),
+        Producto(2, "Cafe Expresso", 3.00, "Bebidas"),
+        Producto(3, "Pan con Chicharron", 3.20, "Desayuno"),
+        Producto(4, "Cheesecake", 4.50, "Postres"),
+        Producto(5, "Jugo de Naranja", 2.00, "Bebidas")};
+    for (const auto &prod : nuevosProductos)
+    {
+        menu->agregarProducto(prod);
+        productos.push_back(std::make_shared<Producto>(prod));
+    }
 }
 
 // Nueva gestion
@@ -202,7 +209,18 @@ void SistemaPedidos::finalizarPedido(std::shared_ptr<Pedido> pedido)
 void SistemaPedidos::registrarObservador(std::shared_ptr<IObservadorCore> observador)
 {
     if (observador)
-        observadores.push_back(observador);
+    {
+        auto it = std::find_if(
+            observadores.begin(), observadores.end(),
+            [&observador](const std::shared_ptr<IObservadorCore> &ptr)
+            {
+                return ptr == observador;
+            });
+        if (it == observadores.end())
+        {
+            observadores.push_back(observador);
+        }
+    }
 }
 
 void SistemaPedidos::removerObservador(IObservadorCore *observador)
@@ -219,13 +237,6 @@ void SistemaPedidos::removerObservador(IObservadorCore *observador)
     {
         observadores.erase(it);
     }
-}
-
-// Satisface la interfaz ICoreSistema (version con puntero crudo)
-void SistemaPedidos::registrarObservador(IObservadorCore *observador)
-{
-    // No ownership transfer here; si se llama la version cruda, crear un weak wrapper no es seguro.
-    // Esta implementación queda como stub para mantener compatibilidad con la interfaz antigua.
 }
 
 void SistemaPedidos::notificarObservadores(const Pedido *pedido)
@@ -322,8 +333,10 @@ std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
 }
 
 void SistemaPedidos::procesarSiguientePedido()
-{ // TODO: Procesar pedido y notificar
-    notificarObservadores(nullptr);
+{
+    // Procesa el siguiente pedido en cola y notifica
+    auto pedidoProcesado = procesarSiguientePedidoInterno();
+    notificarObservadores(pedidoProcesado.get());
 }
 
 /**

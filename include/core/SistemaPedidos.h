@@ -52,8 +52,6 @@ private:
     std::atomic<int> proximoIdPersona{1};
 
 public:
-    // Satisface la interfaz ICoreSistema
-    void registrarObservador(IObservadorCore *observador) override;
     SistemaPedidos();
     ~SistemaPedidos();
 
