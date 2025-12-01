@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "core/SistemaPedidos.h"
 
 #include <QMessageBox>
 #include <QDebug>
@@ -11,9 +12,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     qDebug() << "[MainWindow] Inicializando componentes backend...";
 
-    // Inicializar el core falso
-    // coreSistema = std::make_unique<Core>(); <-- Aquí iría la implementación real del core
-    coreSistema = std::make_unique<CoreFalso>();
+    // Inicializar el core real
+    auto sistema = std::make_shared<SistemaPedidos>();
+    sistema->inicializarMenu(); // Asegurar que el menu tenga datos
+    coreSistema = sistema;
 
     coreAdapter = std::make_unique<CoreQtAdapter>();
 

@@ -12,17 +12,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
-
+# Include Backend Sources
+# Globbing from parent directory
+file(GLOB_RECURSE BACKEND_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
+# Exclude main.cpp from backend to avoid multiple main functions
+list(FILTER BACKEND_SOURCES EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/src/main.cpp$")
 
 set(PROJECT_SOURCES
     src/main.cpp
     src/mainwindow.cpp
     src/mainwindow.h
     src/mainwindow.ui
-    src/CoreFalso.h
-    src/CoreFalso.cpp
     src/CoreQtAdapter.h
     src/CoreQtAdapter.cpp
+    ${BACKEND_SOURCES}
 )
 
 add_executable(CafeteriaApp

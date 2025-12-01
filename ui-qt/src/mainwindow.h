@@ -9,7 +9,6 @@
 #include "api/ApiDTOs.h"
 
 // Clases de implementación del core
-#include "CoreFalso.h"     // motor falso para pruebas
 #include "CoreQtAdapter.h" // 'Traductor' de observadores C++ a señales Qt
 
 QT_BEGIN_NAMESPACE
@@ -33,7 +32,7 @@ private:
     // Componentes 'backend'
 
     // Interfaz de desacoplamiento con el core del sistema
-    std::unique_ptr<ICoreSistema> coreSistema;
+    std::shared_ptr<ICoreSistema> coreSistema;
 
     // "Traductor" de observadores C++ a señales Qt
     std::unique_ptr<CoreQtAdapter> coreAdapter;
