@@ -17,10 +17,10 @@ MainWindow::MainWindow(QWidget *parent)
     sistema->inicializarMenu(); // Asegurar que el menu tenga datos
     coreSistema = sistema;
 
-    coreAdapter = std::make_unique<CoreQtAdapter>();
+    coreAdapter = std::make_shared<CoreQtAdapter>();
 
     // Registrar observador
-    coreSistema->registrarObservador(coreAdapter.get());
+    coreSistema->registrarObservador(coreAdapter);
 
     // Conectar señales y slots
     conectarSenalesYSlots();

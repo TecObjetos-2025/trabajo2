@@ -35,7 +35,7 @@ private:
     std::shared_ptr<ICoreSistema> coreSistema;
 
     // "Traductor" de observadores C++ a señales Qt
-    std::unique_ptr<CoreQtAdapter> coreAdapter;
+    std::shared_ptr<CoreQtAdapter> coreAdapter;
 
     // Métodos auxiliares
 

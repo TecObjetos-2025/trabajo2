@@ -10,7 +10,7 @@ public:
     virtual ~ICoreSistema() = default;
 
     // --- Gestion de Observadores
-    virtual void registrarObservador(IObservadorCore *observador) = 0;
+    virtual void registrarObservador(std::shared_ptr<IObservadorCore> observador) = 0;
     virtual void removerObservador(IObservadorCore *observador) = 0;
 
     // --- Funciones "Vista Cajero"

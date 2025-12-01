@@ -31,5 +31,7 @@ add_executable(cafeteria.out ${SOURCES})
 
 message(STATUS "Configuración de CMake para CafeteriaManager completada.")
 
+add_subdirectory(ui-qt)
+
 # --- FASE 3: Tests
 add_subdirectory(tests)
