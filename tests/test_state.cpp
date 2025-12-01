@@ -5,79 +5,79 @@
 #include "models/EstadoEnPreparacion.h"
 #include "models/EstadoListo.h"
 
-// Helper to create a dummy client
-std::shared_ptr<Cliente> createDummyClient() {
+// Ayuda para crear un cliente dummy
+std::shared_ptr<Cliente> createDummyClient()
+{
     return std::make_shared<Cliente>(1, "Test Client", "123456789");
 }
 
-TEST(StateTest, InitialStateIsQueued) {
+TEST(StateTest, InitialStateIsQueued)
+{
     auto cliente = createDummyClient();
     Pedido pedido(1, cliente);
-    // Assuming default state is EstadoEnCola or similar.
-    // Let's verify via getEstadoNombre or behavior.
-    // Based on code, usually it starts in "En Cola"
 
-    // I need to check exact string or logic.
-    // Assuming "En Cola" based on typical names.
+    // Chequear estado inicial
     EXPECT_EQ(pedido.getEstadoNombre(), "En Cola");
 }
 
-TEST(StateTest, TransitionQueuedToInPreparation) {
+TEST(StateTest, TransitionQueuedToInPreparation)
+{
     auto cliente = createDummyClient();
     Pedido pedido(1, cliente);
 
-    // Check initial state
+    // Chequear estado inicial
     EXPECT_EQ(pedido.getEstadoNombre(), "En Cola");
 
-    // Advance
     pedido.avanzar();
 
     EXPECT_EQ(pedido.getEstadoNombre(), "En Preparacion");
 }
 
-TEST(StateTest, TransitionInPreparationToReady) {
+TEST(StateTest, TransitionInPreparationToReady)
+{
     auto cliente = createDummyClient();
     Pedido pedido(1, cliente);
 
-    pedido.avanzar(); // To En Preparacion
-    pedido.avanzar(); // To Listo
+    pedido.avanzar(); // A En Preparacion
+    pedido.avanzar(); // A Listo
 
     EXPECT_EQ(pedido.getEstadoNombre(), "Listo");
 }
 
-TEST(StateTest, CannotAdvanceFromReady) {
+TEST(StateTest, CannotAdvanceFromReady)
+{
     auto cliente = createDummyClient();
     Pedido pedido(1, cliente);
 
-    pedido.avanzar(); // To En Preparacion
-    pedido.avanzar(); // To Listo
+    pedido.avanzar(); // A En Preparacion
+    pedido.avanzar(); // A Listo
 
     std::string stateBefore = pedido.getEstadoNombre();
-    pedido.avanzar(); // Should stay ready or do nothing
+    pedido.avanzar(); // Debería no cambiar
     EXPECT_EQ(pedido.getEstadoNombre(), stateBefore);
 }
 
-TEST(StateTest, CancelQueuedOrder) {
+TEST(StateTest, CancelQueuedOrder)
+{
     auto cliente = createDummyClient();
     Pedido pedido(1, cliente);
 
-    // Should be able to cancel
+    // Debería poder cancelar
     pedido.cancelar();
 
-    // Assuming cancelled state exists or it handles it.
-    // If "Cancelado" state doesn't exist, we might check output or behavior.
-    // Let's check if the state name changes to "Cancelado"
+    // Se asume estado "Cancelado"
     EXPECT_EQ(pedido.getEstadoNombre(), "Cancelado");
 }
 
-TEST(StateTest, CannotCancelInPreparation) {
+TEST(StateTest, CannotCancelInPreparation)
+{
     auto cliente = createDummyClient();
     Pedido pedido(1, cliente);
 
     pedido.avanzar(); // En Preparacion
 
     std::string stateBefore = pedido.getEstadoNombre();
-    pedido.cancelar(); // Should NOT cancel
+    pedido.cancelar(); // Debería no cambiar
 
     EXPECT_EQ(pedido.getEstadoNombre(), stateBefore);
     EXPECT_EQ(pedido.getEstadoNombre(), "En Preparacion");

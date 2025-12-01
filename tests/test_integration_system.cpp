@@ -10,30 +10,35 @@
 #include <chrono>
 
 // Mock Observer
-class MockObservador : public IObservadorCore {
+class MockObservador : public IObservadorCore
+{
 public:
     std::atomic<int> pedidosNuevos{0};
     std::atomic<int> pedidosTerminados{0};
     std::atomic<int> ultimoPedidoTerminadoId{-1};
 
-    void onNuevosPedidosEnCola() override {
+    void onNuevosPedidosEnCola() override
+    {
         pedidosNuevos++;
     }
 
-    void onPedidoTerminado(int idPedido) override {
+    void onPedidoTerminado(int idPedido) override
+    {
         pedidosTerminados++;
         ultimoPedidoTerminadoId = idPedido;
     }
 
-    void onError(const std::string &mensaje) override {
-        // Mock implementation, maybe log or ignore
+    void onError(const std::string &mensaje) override
+    {
+        // Mock de implementación, tal vez registrar o ignorar
     }
 };
 
-TEST(IntegrationTest, FullSystemFlow) {
+TEST(IntegrationTest, FullSystemFlow)
+{
     SistemaPedidos sistema;
 
-    // 1. Setup Data
+    // 1. Setear Datos
     auto prod1 = std::make_shared<Producto>(1, "Cafe", 5.0, "Bebidas");
     sistema.agregarProducto(prod1);
 
@@ -42,38 +47,37 @@ TEST(IntegrationTest, FullSystemFlow) {
     auto observador = std::make_shared<MockObservador>();
     sistema.registrarObservador(observador);
 
-    // 2. Create Order
+    // 2. Crear Pedido
     auto pedido = CafeteriaFactory::crearPedido(999, cliente);
     pedido->agregarItem(prod1, 1);
 
-    // 3. Finalize Order (This puts it in Queue and Notifies)
+    // 3. Finalizar Pedido (Esto lo pone en Cola y Notifica)
     sistema.finalizarPedido(pedido);
 
     EXPECT_EQ(observador->pedidosNuevos, 1);
 
-    // Verify Queue
-    // SistemaPedidos has `mostrarPedidosEnEspera` which prints.
-    // It has `getPedidosEnCola` returning DTOs.
+    // Verificar Pedido en Cola
+    // SistemaPedidos tiene `mostrarPedidosEnEspera` que imprime.
+    // Tiene `getPedidosEnCola` que devuelve DTOs.
     auto enCola = sistema.getPedidosEnCola();
     ASSERT_EQ(enCola.size(), 1);
     EXPECT_EQ(enCola[0].id_pedido, 999);
 
-    // 4. Consumer (Cook) Logic simulation
-    // We can simulate what `Cocinero` does or use `SistemaPedidos::procesarSiguientePedidoInterno`
+    // 4. Consumidor (Cocinero) Lógica simulación
 
-    // Let's create a thread to act as Cook
+    // Simular que un cocinero procesa el pedido.
     std::atomic<bool> done(false);
-    std::thread cookThread([&sistema, &done, &observador]() {
-        // Wait for order
+    std::thread cookThread([&sistema, &done, &observador]()
+                           {
+        // Esperar hasta que haya un pedido en cola
         auto pedidoProcesado = sistema.procesarSiguientePedidoInterno();
         if (pedidoProcesado) {
-            // Simulate cooking time (fast)
+            // Simular tiempo de cocción
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            // Notify completion
+            // Notificar finalización
             sistema.notificarPedidoTerminado(pedidoProcesado);
             done = true;
-        }
-    });
+        } });
 
     cookThread.join();
 

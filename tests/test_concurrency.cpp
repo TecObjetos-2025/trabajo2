@@ -5,7 +5,8 @@
 #include <atomic>
 #include <chrono>
 
-TEST(ConcurrencyTest, BasicPushPop) {
+TEST(ConcurrencyTest, BasicPushPop)
+{
     ColaThreadSafe<int> cola;
     cola.push(1);
     cola.push(2);
@@ -14,18 +15,19 @@ TEST(ConcurrencyTest, BasicPushPop) {
     EXPECT_EQ(cola.pop(), 2);
 }
 
-TEST(ConcurrencyTest, BlockingPop) {
+TEST(ConcurrencyTest, BlockingPop)
+{
     ColaThreadSafe<int> cola;
     std::atomic<bool> popped(false);
 
-    std::thread consumer([&cola, &popped]() {
+    std::thread consumer([&cola, &popped]()
+                         {
         int val = cola.pop();
-        if (val == 42) popped = true;
-    });
+        if (val == 42) popped = true; });
 
-    // Give thread time to start and block
+    // Obtener un retardo seguro
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    EXPECT_FALSE(popped); // Should still be waiting
+    EXPECT_FALSE(popped); // Debe estar bloqueado
 
     cola.push(42);
     consumer.join();
@@ -33,7 +35,8 @@ TEST(ConcurrencyTest, BlockingPop) {
     EXPECT_TRUE(popped);
 }
 
-TEST(ConcurrencyTest, MultipleProducersConsumers) {
+TEST(ConcurrencyTest, MultipleProducersConsumers)
+{
     ColaThreadSafe<int> cola;
     const int NUM_THREADS = 4;
     const int ITEMS_PER_THREAD = 1000;
@@ -43,45 +46,50 @@ TEST(ConcurrencyTest, MultipleProducersConsumers) {
     std::atomic<int> sum(0);
 
     // Producers
-    for (int i = 0; i < NUM_THREADS; ++i) {
-        producers.emplace_back([&cola, ITEMS_PER_THREAD]() {
+    for (int i = 0; i < NUM_THREADS; ++i)
+    {
+        producers.emplace_back([&cola, ITEMS_PER_THREAD]()
+                               {
             for (int j = 0; j < ITEMS_PER_THREAD; ++j) {
                 cola.push(1);
-            }
-        });
+            } });
     }
 
     // Consumers
-    for (int i = 0; i < NUM_THREADS; ++i) {
-        consumers.emplace_back([&cola, &sum, ITEMS_PER_THREAD]() {
+    for (int i = 0; i < NUM_THREADS; ++i)
+    {
+        consumers.emplace_back([&cola, &sum, ITEMS_PER_THREAD]()
+                               {
             for (int j = 0; j < ITEMS_PER_THREAD; ++j) {
                 int val = cola.pop();
                 sum += val;
-            }
-        });
+            } });
     }
 
-    for (auto& t : producers) t.join();
-    for (auto& t : consumers) t.join();
+    for (auto &t : producers)
+        t.join();
+    for (auto &t : consumers)
+        t.join();
 
     int expected_sum = NUM_THREADS * ITEMS_PER_THREAD * 1;
     EXPECT_EQ(sum, expected_sum);
     EXPECT_TRUE(cola.empty());
 }
 
-TEST(ConcurrencyTest, CloseQueueReleasesBlock) {
+TEST(ConcurrencyTest, CloseQueueReleasesBlock)
+{
     ColaThreadSafe<int> cola;
     std::atomic<bool> exception_caught(false);
 
-    std::thread consumer([&cola, &exception_caught]() {
+    std::thread consumer([&cola, &exception_caught]()
+                         {
         try {
             cola.pop();
         } catch (const std::runtime_error& e) {
             if (std::string(e.what()) == "Cola cerrada") {
                 exception_caught = true;
             }
-        }
-    });
+        } });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     cola.cerrar();

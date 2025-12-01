@@ -5,7 +5,8 @@
 #include "models/Cocinero.h"
 #include "models/Administrador.h"
 
-TEST(FactoryTest, CreateCliente) {
+TEST(FactoryTest, CreateCliente)
+{
     auto cliente = CafeteriaFactory::crearCliente(1, "Juan", "555-1234");
     ASSERT_NE(cliente, nullptr);
     EXPECT_EQ(cliente->getId(), 1);
@@ -13,28 +14,29 @@ TEST(FactoryTest, CreateCliente) {
     EXPECT_EQ(cliente->getTelefono(), "555-1234");
 }
 
-TEST(FactoryTest, CreateCocinero) {
-    // We need a SistemaPedidos instance, although it can be null if not used in constructor logic immediately.
-    // Based on signature: SistemaPedidos* sistema
+TEST(FactoryTest, CreateCocinero)
+{
+    // Incluir un puntero nulo para SistemaPedidos por simplicidad
     SistemaPedidos sistema;
     auto cocinero = CafeteriaFactory::crearCocinero(2, "Chef", "C001", &sistema);
 
     ASSERT_NE(cocinero, nullptr);
     EXPECT_EQ(cocinero->getId(), 2);
     EXPECT_EQ(cocinero->getNombre(), "Chef");
-    // Check specific Cocinero method if available, or dynamic cast
-    EXPECT_NE(dynamic_cast<Cocinero*>(cocinero.get()), nullptr);
+    EXPECT_NE(dynamic_cast<Cocinero *>(cocinero.get()), nullptr);
 }
 
-TEST(FactoryTest, CreateAdministrador) {
+TEST(FactoryTest, CreateAdministrador)
+{
     auto admin = CafeteriaFactory::crearAdministrador(3, "Admin", "A001");
     ASSERT_NE(admin, nullptr);
     EXPECT_EQ(admin->getId(), 3);
     EXPECT_EQ(admin->getNombre(), "Admin");
-    EXPECT_NE(dynamic_cast<Administrador*>(admin.get()), nullptr);
+    EXPECT_NE(dynamic_cast<Administrador *>(admin.get()), nullptr);
 }
 
-TEST(FactoryTest, CreatePedido) {
+TEST(FactoryTest, CreatePedido)
+{
     auto cliente = CafeteriaFactory::crearCliente(1, "Juan", "555-1234");
     auto pedido = CafeteriaFactory::crearPedido(100, cliente);
 
@@ -43,10 +45,12 @@ TEST(FactoryTest, CreatePedido) {
     EXPECT_EQ(pedido->getCliente(), cliente);
 }
 
-TEST(FactoryTest, ObtenerEstrategia) {
+TEST(FactoryTest, ObtenerEstrategia)
+{
+    // Asumiendo que lo devuelto es no nulo indica éxito
+
     auto est1 = CafeteriaFactory::obtenerEstrategia("porcentaje_10");
     ASSERT_NE(est1, nullptr);
-    // Assuming we can check description or type, but here just non-null is good start.
 
     auto est2 = CafeteriaFactory::obtenerEstrategia("fijo_5");
     ASSERT_NE(est2, nullptr);
