@@ -48,6 +48,16 @@ public:
         return elemento;
     }
 
+    bool tryPop(T &outValor)
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        if (cola.empty())
+            return false;
+        outValor = cola.front();
+        cola.pop_front();
+        return true;
+    }
+
     void cerrar()
     {
         {

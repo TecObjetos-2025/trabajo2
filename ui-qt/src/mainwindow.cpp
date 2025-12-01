@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 #include "core/SistemaPedidos.h"
+#include "core/CafeteriaFactory.h"
 
 #include <QMessageBox>
 #include <QDebug>
@@ -15,6 +16,11 @@ MainWindow::MainWindow(QWidget *parent)
     // Inicializar el core real
     auto sistema = std::make_shared<SistemaPedidos>();
     sistema->inicializarMenu(); // Asegurar que el menu tenga datos
+
+    // Registrar un cliente para pruebas
+    auto clienteDummy = CafeteriaFactory::crearCliente(1, "Cliente Prueba", "999-888-777");
+    sistema->registrarPersona(clienteDummy);
+
     coreSistema = sistema;
 
     coreAdapter = std::make_shared<CoreQtAdapter>();
