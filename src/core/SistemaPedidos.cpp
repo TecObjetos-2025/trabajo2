@@ -5,6 +5,10 @@
 #  @date 2025
 #  @details Este archivo contiene la lógica principal para la gestión de clientes, pedidos y notificaciones a la cocina.
 #*/
+#include <iostream>
+#include <stdexcept> // Capturar excepciones en la Cola
+#include <algorithm> // Para std::find
+#include <iomanip>   // Formatear salida de precios
 #include "core/SistemaPedidos.h"
 #include "models/Persona.h"
 #include "models/Cliente.h"
@@ -14,9 +18,6 @@
 #include "models/Pedido.h"
 #include "api/IObservadorCore.h"
 #include "core/MenuCafeteria.h"
-#include <iostream>
-#include <stdexcept> // Capturar excepciones en la Cola
-#include <algorithm> // Para std::find
 #include "patterns/DescuentoNulo.h"
 #include "patterns/DescuentoPorcentaje.h"
 #include "patterns/DescuentoFijo.h"
@@ -308,7 +309,10 @@ void SistemaPedidos::finalizarPedido(
         return;
     }
     pedido->marcarComoPagado();
-    std::cout << "[API] Pedido finalizado y marcado como PAGADO. Total: $" << pedido->calcularTotal() << std::endl;
+    std::cout << "[API] Pedido finalizado y marcado como PAGADO. Total: $"
+              << std::fixed << std::setprecision(2)
+              << pedido->calcularTotal()
+              << std::endl;
     pedidos_en_espera.push(pedido);
     notificarObservadores(pedido.get());
 }

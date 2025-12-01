@@ -103,6 +103,7 @@ public:
     // Métodos Observer API
     void registrarObservador(std::shared_ptr<IObservadorCore> observador);
     void removerObservador(IObservadorCore *observador) override;
+
     /**
      * @brief Notifica a todos los observadores registrados sobre el cambio de estado de un pedido.
      * @param pedido Puntero al pedido que ha cambiado de estado.
