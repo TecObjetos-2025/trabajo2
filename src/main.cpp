@@ -1,3 +1,4 @@
+/*
 #include <iostream>
 #include <limits>
 #include <thread>
@@ -13,9 +14,11 @@
 #include "patterns/DescuentoPorcentaje.h"
 #include "patterns/DescuentoFijo.h"
 #include "core/CafeteriaFactory.h"
+ */
 
 int main()
 {
+    /*
     std::cout << "--- Iniciando Sistema de Cafeteria (v2.1 con Factory) ---" << std::endl;
 
     SistemaPedidos sistema;
@@ -109,6 +112,7 @@ int main()
 
     pedidoDemo->setEstrategiaDescuento(std::make_unique<DescuentoFijo>(5));
     std::cout << "Total con $5 descuento fijo: $" << pedidoDemo->calcularTotal() << std::endl;
+    */
 
     return 0;
 }
