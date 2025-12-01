@@ -2,9 +2,11 @@
 
 DescuentoFijo::DescuentoFijo(double descuento_) : descuento(descuento_) {}
 
+#include <algorithm>
+
 double DescuentoFijo::aplicarDescuento(double precioBase) const
 {
-    return precioBase - descuento;
+    return std::max(0.0, precioBase - descuento);
 }
 std::string DescuentoFijo::getDescripcion() const
 {
