@@ -17,8 +17,8 @@
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>0</x>
-      <y>0</y>
+      <x>10</x>
+      <y>10</y>
       <width>751</width>
       <height>391</height>
      </rect>
@@ -109,7 +109,7 @@
        <rect>
         <x>50</x>
         <y>30</y>
-        <width>201</width>
+        <width>381</width>
         <height>241</height>
        </rect>
       </property>
@@ -117,7 +117,7 @@
      <widget class="QPushButton" name="btnProcesarSiguientePedido">
       <property name="geometry">
        <rect>
-        <x>310</x>
+        <x>450</x>
         <y>30</y>
         <width>88</width>
         <height>26</height>

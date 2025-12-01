@@ -82,7 +82,7 @@ void MainWindow::cargarMenuEnUI()
                                .arg(producto.precio, 0, 'f', 2);
         QListWidgetItem *item = new QListWidgetItem(itemText);
         item->setData(Qt::UserRole, producto.id); // Almacenar el ID del producto
-        ui->listaMenuProductos->addItem(itemText);
+        ui->listaMenuProductos->addItem(item);
     }
 }
 
