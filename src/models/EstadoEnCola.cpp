@@ -1,5 +1,6 @@
 #include "../../include/models/EstadoEnCola.h"
 #include "../../include/models/EstadoEnPreparacion.h"
+#include "../../include/models/EstadoCancelado.h"
 #include "../../include/models/Pedido.h"
 #include <iostream>
 
@@ -20,4 +21,5 @@ void EstadoEnCola::avanzar(Pedido *pedido)
 void EstadoEnCola::cancelar(Pedido *pedido)
 {
     cout << "Pedido #" << pedido->getId() << ": Cancelacion exitosa desde En Cola." << endl;
+    pedido->setEstado(EstadoCancelado::getInstance());
 }
