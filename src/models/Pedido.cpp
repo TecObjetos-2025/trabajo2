@@ -1,3 +1,11 @@
+/**
+ * @file Pedido.cpp
+ * @brief Implementación de la clase Pedido que representa un pedido en la cafetería.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @date 2025
+ * @details Esta clase utiliza el patrón State para gestionar dinámicamente el estado del pedido y el
+ * patrón Strategy para aplicar descuentos.
+ */
 
 #include "models/Pedido.h"
 #include "models/Cliente.h"
@@ -133,5 +141,6 @@ void Pedido::cancelar()
  */
 void Pedido::marcarComoPagado()
 {
-    std::cout << "ADVERTENCIA: marcarComoPagado() llamado. Lógica de estado 'Pagado' pendiente." << std::endl;
+    this->pagado = true;
+    std::cout << "Pedido #" << id << " marcado como PAGADO." << std::endl;
 }
