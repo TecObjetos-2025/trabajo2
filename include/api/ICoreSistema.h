@@ -4,6 +4,15 @@
 #include "IObservadorCore.h"
 #include "ApiDTOs.h"
 
+/**
+ * @file ICoreSistema.h
+ * @brief Interfaz para el núcleo del sistema de pedidos.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @date 2025
+ * @details Define las operaciones principales que el núcleo del sistema debe implementar,
+ * incluyendo la gestión de observadores, pedidos y el menú de productos.
+ */
+
 class ICoreSistema
 {
 public:

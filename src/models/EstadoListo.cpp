@@ -1,3 +1,11 @@
+/**
+ * @file EstadoListo.cpp
+ * @brief Implementación del estado "Listo" para un pedido.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @date 2025
+ * @details Esta clase implementa el patrón State para manejar el estado "Listo" de un pedido.
+ */
+
 #include "../../include/models/EstadoListo.h"
 #include "../../include/models/Pedido.h"
 #include <iostream>

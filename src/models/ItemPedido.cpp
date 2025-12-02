@@ -1,3 +1,11 @@
+/**
+ * @file ItemPedido.cpp
+ * @brief Implementación de la clase ItemPedido que representa un ítem en un pedido.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @date 2025
+ * @details Esta clase maneja los ítems de un pedido, incluyendo el producto y la cantidad.
+ */
+
 #include "models/ItemPedido.h"
 
 // Ahora se recibe puntero
