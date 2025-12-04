@@ -23,6 +23,7 @@
 #include "patterns/DescuentoPorcentaje.h"
 #include "patterns/DescuentoFijo.h"
 #include "core/CafeteriaFactory.h"
+#include "core/Configuracion.h"
 
 // Función auxiliar para convertir ItemPedido a ItemPedidoInfo
 static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
@@ -288,6 +289,11 @@ std::vector<InfoDescuento> SistemaPedidos::getDescuentosDisponibles()
     descuentos.push_back({"fijo_5", "Descuento fijo de $5"});
     descuentos.push_back({"fijo_10", "Descuento fijo de $10"});
     return descuentos;
+}
+
+double SistemaPedidos::getPorcentajeIGV() const
+{
+    return Config::TASA_IGV; // Porcentaje fijo del IGV
 }
 
 void SistemaPedidos::finalizarPedido(

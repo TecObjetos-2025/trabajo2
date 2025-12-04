@@ -113,6 +113,9 @@ public:
     // Métodos API
     std::vector<InfoProducto> getMenu() override;
     std::vector<InfoDescuento> getDescuentosDisponibles() override;
+
+    double getPorcentajeIGV() const override;
+
     /**
      * @brief Finaliza un pedido a partir de los datos del cliente y los ítems, aplicando descuentos.
      * @param cliente Nombre o identificador del cliente.

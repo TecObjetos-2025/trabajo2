@@ -35,6 +35,11 @@ public:
     virtual std::vector<InfoDescuento> getDescuentosDisponibles() = 0;
 
     /**
+     * Obtiene el porcentaje actual del IGV.
+     */
+    virtual double getPorcentajeIGV() const = 0;
+
+    /**
      * Finaliza y paga un pedido, encolandolo para la cocina.
      */
     virtual void finalizarPedido(const std::string &cliente,

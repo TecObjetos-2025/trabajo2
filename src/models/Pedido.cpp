@@ -12,10 +12,8 @@
 #include "models/ItemPedido.h"
 #include "models/EstadoEnCola.h" // Estado inicial del pedido
 #include "patterns/DescuentoNulo.h"
+#include "core/Configuracion.h"
 #include <iostream>
-
-// Valor del IGV aplicado a los pedidos
-const double Pedido::IGV = 0.18;
 
 /**
  * @brief Constructor de Pedido
@@ -61,7 +59,7 @@ double Pedido::calcularTotal() const
     {
         subtotal += item->getSubtotal();
     }
-    double totalConIGV = subtotal * (1 + IGV);
+    double totalConIGV = subtotal * (1 + Config::TASA_IGV);
     if (estrategiaDescuento)
         return estrategiaDescuento->aplicarDescuento(totalConIGV);
     else

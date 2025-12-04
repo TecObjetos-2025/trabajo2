@@ -106,19 +106,24 @@ void MainWindow::cargarPedidosEnUI()
 void MainWindow::actualizarTotalesUI()
 {
     double subtotal = 0.0;
+
     for (int i = 0; i < ui->listaOrdenActual->count(); ++i)
     {
         QListWidgetItem *item = ui->listaOrdenActual->item(i);
-        double precio = item->data(Qt::UserRole + 1).toDouble(); // Recuperar precio
+        double precio = item->data(RolePrecioUnitario).toDouble(); // Recuperar precio
         subtotal += precio;
     }
 
-    double igv = subtotal * 0.18; // IGV del 18%
-    double total = subtotal + igv;
+    double tasaIGV = coreSistema->getPorcentajeIGV();
 
-    // Actualizar las etiquetas (Asumiendo que se llaman lblSubtotal, lblIGV, lblTotal)
+    double montoIGV = subtotal * tasaIGV;
+    double total = subtotal + montoIGV;
+
+    // Actualizacion visual
     ui->lblSubtotal->setText(QString("S/ %1").arg(subtotal, 0, 'f', 2));
-    ui->lblIGV->setText(QString("S/ %1").arg(igv, 0, 'f', 2));
+    ui->lblIGV->setText(QString("S/ %1").arg(montoIGV, 0, 'f', 2));
+
+    // Total en negrita
     ui->lblTotal->setText(QString("S/ %1").arg(total, 0, 'f', 2));
 }
 

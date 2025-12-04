@@ -22,6 +22,12 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+    enum ItemDataRoles
+    {
+        RoleProductoId = Qt::UserRole,
+        RolePrecioUnitario = Qt::UserRole + 1
+    };
+
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
