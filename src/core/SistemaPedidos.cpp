@@ -1,10 +1,11 @@
-#/**
-#  @file SistemaPedidos.cpp
-#  @brief Implementación del sistema de gestión de pedidos para la cafetería.
-#  @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
-#  @date 2025
-#  @details Este archivo contiene la lógica principal para la gestión de clientes, pedidos y notificaciones a la cocina.
-#*/
+/**
+ *  @file SistemaPedidos.cpp
+ *  @brief Implementación del sistema de gestión de pedidos para la cafetería.
+ *  @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ *  @date 2025
+ *  @details Este archivo contiene la lógica principal para la gestión de clientes, pedidos y notificaciones a la cocina.
+ */
+
 #include <iostream>
 #include <stdexcept> // Capturar excepciones en la Cola
 #include <algorithm> // Para std::find

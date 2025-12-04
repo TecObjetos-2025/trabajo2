@@ -103,6 +103,25 @@ void MainWindow::cargarPedidosEnUI()
     }
 }
 
+void MainWindow::actualizarTotalesUI()
+{
+    double subtotal = 0.0;
+    for (int i = 0; i < ui->listaOrdenActual->count(); ++i)
+    {
+        QListWidgetItem *item = ui->listaOrdenActual->item(i);
+        double precio = item->data(Qt::UserRole + 1).toDouble(); // Recuperar precio
+        subtotal += precio;
+    }
+
+    double igv = subtotal * 0.18; // IGV del 18%
+    double total = subtotal + igv;
+
+    // Actualizar las etiquetas (Asumiendo que se llaman lblSubtotal, lblIGV, lblTotal)
+    ui->lblSubtotal->setText(QString("S/ %1").arg(subtotal, 0, 'f', 2));
+    ui->lblIGV->setText(QString("S/ %1").arg(igv, 0, 'f', 2));
+    ui->lblTotal->setText(QString("S/ %1").arg(total, 0, 'f', 2));
+}
+
 // --- Slots de la UI
 
 // Vista Cajero
@@ -116,9 +135,43 @@ void MainWindow::on_btnAnadirItem_clicked()
         return;
     }
 
+    int id = itemSeleccionado->data(Qt::UserRole).toInt();
+
+    // Recuperar precio, forma sucia (puede mejorarse)
+    QString texto = itemSeleccionado->text();
+    int posMoneda = texto.lastIndexOf("S/");
+    int posFin = texto.lastIndexOf(")");
+    // qDebug() << "Posicion de S/: " << posMoneda;
+    // qDebug() << "Texto a partir de Posicion " << texto.mid(posMoneda);
+    double precio = texto.mid(posMoneda + 2, posFin - posMoneda - 2).toDouble();
+
+    qDebug() << "[MainWindow] Añadiendo ítem al pedido actual: ID =" << id << ", Precio =" << precio;
+
+    // Crear el item visual
+    QListWidgetItem *newItem = new QListWidgetItem(itemSeleccionado->text());
+    newItem->setData(Qt::UserRole, id);
+    newItem->setData(Qt::UserRole + 1, precio); // Guardar precio
+
     // Anadir al pedido actual
-    ui->listaOrdenActual->addItem(itemSeleccionado->clone());
+    ui->listaOrdenActual->addItem(newItem);
     qDebug() << "[MainWindow] Ítem añadido al pedido actual.";
+    actualizarTotalesUI();
+}
+
+void MainWindow::on_btnQuitarItem_clicked()
+{
+    // Obtener la fila actual
+    int fila = ui->listaOrdenActual->currentRow();
+
+    if (fila >= 0)
+    {
+        // 'takeItem' elimina el ítem de la lista pero no borra la memoria
+        QListWidgetItem *item = ui->listaOrdenActual->takeItem(fila);
+        delete item; // Liberar memoria manual
+
+        // Recalcular
+        actualizarTotalesUI();
+    }
 }
 
 void MainWindow::on_btnFinalizarPedido_clicked()
