@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>850</width>
-    <height>503</height>
+    <width>866</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -62,7 +62,8 @@
                <string>Buscar</string>
               </property>
               <property name="icon">
-               <iconset theme="edit-find"/>
+               <iconset theme="edit-find">
+                <normaloff>.</normaloff>.</iconset>
               </property>
              </widget>
             </item>
@@ -79,8 +80,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>323</width>
-                 <height>327</height>
+                 <width>331</width>
+                 <height>324</height>
                 </rect>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -116,7 +117,8 @@
                <string> Añadir</string>
               </property>
               <property name="icon">
-               <iconset theme="go-next"/>
+               <iconset theme="go-next">
+                <normaloff>.</normaloff>.</iconset>
               </property>
              </widget>
             </item>
@@ -126,7 +128,8 @@
                <string> Quitar</string>
               </property>
               <property name="icon">
-               <iconset theme="go-previous"/>
+               <iconset theme="go-previous">
+                <normaloff>.</normaloff>.</iconset>
               </property>
              </widget>
             </item>
@@ -261,29 +264,91 @@
        <attribute name="title">
         <string>Cocinero</string>
        </attribute>
-       <widget class="QListWidget" name="listaColaPedidos">
-        <property name="geometry">
-         <rect>
-          <x>50</x>
-          <y>30</y>
-          <width>381</width>
-          <height>241</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="btnProcesarSiguientePedido">
-        <property name="geometry">
-         <rect>
-          <x>450</x>
-          <y>30</y>
-          <width>88</width>
-          <height>26</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Procesar</string>
-        </property>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="leftMargin">
+           <number>8</number>
+          </property>
+          <property name="topMargin">
+           <number>8</number>
+          </property>
+          <property name="rightMargin">
+           <number>8</number>
+          </property>
+          <property name="bottomMargin">
+           <number>8</number>
+          </property>
+          <item>
+           <layout class="QVBoxLayout" name="ColaLayout">
+            <item>
+             <widget class="QPushButton" name="btnProcesarSiguientePedido">
+              <property name="text">
+               <string>Atender Siguiente Ticket</string>
+              </property>
+              <property name="icon">
+               <iconset theme="go-next"/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblCola">
+              <property name="font">
+               <font>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>En Cola</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QListWidget" name="listEnCola"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="ProcesandoLayout">
+            <item>
+             <widget class="QLabel" name="lblProcesando">
+              <property name="font">
+               <font>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Procesando</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QListWidget" name="listProcesando"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="ListoLayout">
+            <item>
+             <widget class="QLabel" name="lblListo">
+              <property name="font">
+               <font>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Listo</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QListWidget" name="listListo"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
@@ -294,7 +359,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>850</width>
+     <width>866</width>
      <height>23</height>
     </rect>
    </property>

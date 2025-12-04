@@ -24,7 +24,7 @@ public:
     /**
      * @brief Obtiene el nombre descriptivo del estado.
      */
-    std::string getNombre() const override { return "En Preparacion"; }
+    std::string getNombre() const override { return "En Preparación"; }
 
     /**
      * @brief Acceso a la instancia única de este estado (Singleton).

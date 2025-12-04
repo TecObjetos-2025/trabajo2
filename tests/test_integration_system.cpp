@@ -66,32 +66,32 @@ TEST(IntegrationTest, FullSystemFlow)
 
     EXPECT_EQ(observador->pedidosNuevos, 1);
 
-    // Verificar Pedido en Cola
-    // SistemaPedidos tiene `mostrarPedidosEnEspera` que imprime.
-    // Tiene `getPedidosEnCola` que devuelve DTOs.
-    auto enCola = sistema.getPedidosEnCola();
-    ASSERT_EQ(enCola.size(), 1);
-    EXPECT_EQ(enCola[0].id_pedido, 999);
+    auto activos = sistema.getPedidosActivos(); // Antes getPedidosEnCola
+    ASSERT_EQ(activos.size(), 1);
+    EXPECT_EQ(activos[0].id_pedido, 999);
+    EXPECT_EQ(activos[0].estado, "En Cola");
 
     // 4. Consumidor (Cocinero) Lógica simulación
 
     // Simular que un cocinero procesa el pedido.
     std::atomic<bool> done(false);
-    std::thread cookThread([&sistema, &done, &observador]()
+    std::thread cookThread([&sistema, &done]()
                            {
         // Esperar hasta que haya un pedido en cola
         auto pedidoProcesado = sistema.procesarSiguientePedidoInterno();
         if (pedidoProcesado) {
-            // Simular tiempo de cocción
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            pedidoProcesado->avanzar(); // Estado: En Cola -> En Preparacion
+            pedidoProcesado->avanzar(); // Estado: En Preparacion -> Listo
             // Notificar finalización
             sistema.notificarPedidoTerminado(pedidoProcesado);
             done = true;
         } });
 
     cookThread.join();
-
     EXPECT_TRUE(done);
-    EXPECT_EQ(observador->pedidosTerminados, 1);
-    EXPECT_EQ(observador->ultimoPedidoTerminadoId, 999);
+
+    auto activosFinal = sistema.getPedidosActivos();
+    ASSERT_EQ(activosFinal.size(), 1);
+    EXPECT_EQ(activosFinal[0].id_pedido, 999);
+    EXPECT_EQ(activosFinal[0].estado, "Listo");
 }

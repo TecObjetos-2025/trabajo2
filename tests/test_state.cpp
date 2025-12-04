@@ -39,7 +39,7 @@ TEST(StateTest, TransitionQueuedToInPreparation)
 
     pedido.avanzar();
 
-    EXPECT_EQ(pedido.getEstadoNombre(), "En Preparacion");
+    EXPECT_EQ(pedido.getEstadoNombre(), "En Preparación");
 }
 
 TEST(StateTest, TransitionInPreparationToReady)
@@ -89,5 +89,5 @@ TEST(StateTest, CannotCancelInPreparation)
     pedido.cancelar(); // Debería no cambiar
 
     EXPECT_EQ(pedido.getEstadoNombre(), stateBefore);
-    EXPECT_EQ(pedido.getEstadoNombre(), "En Preparacion");
+    EXPECT_EQ(pedido.getEstadoNombre(), "En Preparación");
 }

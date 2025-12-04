@@ -125,6 +125,54 @@ int main(int argc, char *argv[])
         QLineEdit:focus, QComboBox:focus {
             border: 2px solid #387ADF;
         }
+
+        /* --- ESTILO VISTA COCINA (GREEN THEME) --- */
+
+        /* Títulos de las Columnas */
+        QLabel#lblTituloCola, QLabel#lblTituloProcesando, QLabel#lblTituloListo {
+            font-size: 18px;
+            font-weight: bold;
+            color: #111813;
+            padding: 10px;
+        }
+
+        /* Las Listas (Columnas del Kanban) */
+        QListWidget#listEnCola, QListWidget#listProcesando, QListWidget#listListo {
+            background-color: #f6f8f6; /* Fondo gris claro verdoso */
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 8px;
+        }
+
+        /* Items (Tarjetas) */
+        QListWidget::item {
+            background-color: #FFFFFF;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 8px; /* Espacio entre tarjetas */
+            color: #111813;
+            padding: 10px;
+        }
+
+        /* Diferenciación sutil por estado (Opcional) */
+        QListWidget#listProcesando::item {
+            border-left: 4px solid #F5821F; /* Borde naranja para procesando */
+        }
+        QListWidget#listListo::item {
+            border-left: 4px solid #13ec5b; /* Borde verde para listo */
+        }
+
+        /* Botón de Acción Principal (Verde Vibrante) */
+        QPushButton#btnCocinaAccion {
+            background-color: #13ec5b;
+            color: #102216; /* Texto oscuro para contraste */
+            font-weight: bold;
+            border-radius: 6px;
+            padding: 8px;
+        }
+        QPushButton#btnCocinaAccion:hover {
+            background-color: #0fce4d;
+        }
     )");
     MainWindow w;
     w.show();
