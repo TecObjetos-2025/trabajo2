@@ -1,10 +1,11 @@
-#/**
-#  @file SistemaPedidos.cpp
-#  @brief Implementación del sistema de gestión de pedidos para la cafetería.
-#  @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
-#  @date 2025
-#  @details Este archivo contiene la lógica principal para la gestión de clientes, pedidos y notificaciones a la cocina.
-#*/
+/**
+ *  @file SistemaPedidos.cpp
+ *  @brief Implementación del sistema de gestión de pedidos para la cafetería.
+ *  @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ *  @date 2025
+ *  @details Este archivo contiene la lógica principal para la gestión de clientes, pedidos y notificaciones a la cocina.
+ */
+
 #include <iostream>
 #include <stdexcept> // Capturar excepciones en la Cola
 #include <algorithm> // Para std::find
@@ -22,6 +23,7 @@
 #include "patterns/DescuentoPorcentaje.h"
 #include "patterns/DescuentoFijo.h"
 #include "core/CafeteriaFactory.h"
+#include "core/Configuracion.h"
 
 // Función auxiliar para convertir ItemPedido a ItemPedidoInfo
 static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
@@ -202,6 +204,8 @@ void SistemaPedidos::finalizarPedido(std::shared_ptr<Pedido> pedido)
                   << " agregado a la cola de pedidos en espera." << std::endl;
         pedidos_en_espera.push(pedido);
 
+        listaMaestraPedidos.push_back(pedido);
+
         std::cout << "Notificando..." << std::endl;
         notificarObservadores(pedido.get());
     }
@@ -289,6 +293,11 @@ std::vector<InfoDescuento> SistemaPedidos::getDescuentosDisponibles()
     return descuentos;
 }
 
+double SistemaPedidos::getPorcentajeIGV() const
+{
+    return Config::TASA_IGV; // Porcentaje fijo del IGV
+}
+
 void SistemaPedidos::finalizarPedido(
     const std::string &cliente,
     const std::vector<ItemPedidoCrear> &items,
@@ -313,22 +322,24 @@ void SistemaPedidos::finalizarPedido(
               << std::fixed << std::setprecision(2)
               << pedido->calcularTotal()
               << std::endl;
+
+    listaMaestraPedidos.push_back(pedido);
     pedidos_en_espera.push(pedido);
+
     notificarObservadores(pedido.get());
 }
 
-std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
+std::vector<InfoPedido> SistemaPedidos::getPedidosActivos()
 {
     std::vector<InfoPedido> pedidosDTO;
-    std::deque<std::shared_ptr<Pedido>> snapshot = pedidos_en_espera.snapshot();
 
-    for (const auto &pedido : snapshot)
+    for (const auto &pedido : this->listaMaestraPedidos)
     {
         InfoPedido dto;
         dto.id_pedido = pedido->getId();
         dto.cliente = pedido->getCliente()
                           ? pedido->getCliente()->getNombre()
-                          : "";
+                          : "Cliente Anonimo";
 
         dto.estado = pedido->getEstadoNombre();
 
@@ -347,8 +358,33 @@ std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
 
 void SistemaPedidos::procesarSiguientePedido()
 {
-    auto pedidoProcesado = procesarSiguientePedidoInterno();
-    notificarObservadores(pedidoProcesado.get());
+    auto pedido = procesarSiguientePedidoInterno();
+
+    if (pedido)
+    {
+        std::cout << "[SISTEMA] Procesando pedido #" << pedido->getId() << "..." << std::endl;
+
+        pedido->avanzar(); // Estado: En Cola -> En Preparacion
+
+        notificarObservadores(pedido.get());
+
+        std::thread([this, pedido]()
+                    {
+            std::this_thread::sleep_for(std::chrono::seconds(8)); // Simular tiempo de preparación
+
+            std::cout << "[SIMULACION COCINA] Preparando pedido #" << pedido->getId() << "..." << std::endl;
+
+            pedido->avanzar(); // Estado: En Preparacion -> Listo
+
+            std::cout << "[SISTEMA] Pedido #" << pedido->getId() << " listo." << std::endl;
+
+            notificarPedidoTerminado(pedido); })
+            .detach();
+    }
+    else
+    {
+        std::cout << "[SIMULACION COCINA] No hay pedidos para procesar." << std::endl;
+    }
 }
 
 /**

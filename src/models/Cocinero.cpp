@@ -1,3 +1,12 @@
+/**
+ * @file Cocinero.cpp
+ * @brief Implementación de la clase Cocinero que representa a un cocinero en el sistema de pedidos.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @date 2025
+ * @details Esta clase implementa la lógica para que un cocinero procese pedidos en un hilo separado,
+ *          utilizando el patrón Observador para recibir notificaciones de nuevos pedidos.
+ */
+
 #include <thread>
 #include <atomic>
 #include <chrono>

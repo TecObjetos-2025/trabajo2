@@ -6,136 +6,360 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>763</width>
-    <height>456</height>
+    <width>866</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>mainwindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QTabWidget" name="tabWidget">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>751</width>
-      <height>391</height>
-     </rect>
-    </property>
-    <property name="currentIndex">
-     <number>1</number>
-    </property>
-    <widget class="QWidget" name="tab">
-     <attribute name="title">
-      <string>Cajero</string>
-     </attribute>
-     <widget class="QListWidget" name="listaMenuProductos">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>20</y>
-        <width>281</width>
-        <height>311</height>
-       </rect>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>1</number>
       </property>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>Cajero</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <property name="spacing">
+           <number>12</number>
+          </property>
+          <property name="leftMargin">
+           <number>8</number>
+          </property>
+          <property name="topMargin">
+           <number>8</number>
+          </property>
+          <property name="rightMargin">
+           <number>8</number>
+          </property>
+          <property name="bottomMargin">
+           <number>8</number>
+          </property>
+          <item>
+           <layout class="QFormLayout" name="formLayout_2">
+            <property name="leftMargin">
+             <number>6</number>
+            </property>
+            <property name="topMargin">
+             <number>6</number>
+            </property>
+            <property name="rightMargin">
+             <number>6</number>
+            </property>
+            <property name="bottomMargin">
+             <number>6</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QPushButton" name="searchButton">
+              <property name="text">
+               <string>Buscar</string>
+              </property>
+              <property name="icon">
+               <iconset theme="edit-find">
+                <normaloff>.</normaloff>.</iconset>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="searchField"/>
+            </item>
+            <item row="1" column="0" colspan="2">
+             <widget class="QScrollArea" name="scrollArea">
+              <property name="widgetResizable">
+               <bool>true</bool>
+              </property>
+              <widget class="QWidget" name="scrollAreaWidgetContents">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>331</width>
+                 <height>324</height>
+                </rect>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_3">
+                <item>
+                 <widget class="QListWidget" name="listaMenuProductos"/>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <property name="spacing">
+             <number>12</number>
+            </property>
+            <property name="leftMargin">
+             <number>8</number>
+            </property>
+            <property name="topMargin">
+             <number>8</number>
+            </property>
+            <property name="rightMargin">
+             <number>8</number>
+            </property>
+            <property name="bottomMargin">
+             <number>8</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="btnAnadirItem">
+              <property name="text">
+               <string> Añadir</string>
+              </property>
+              <property name="icon">
+               <iconset theme="go-next">
+                <normaloff>.</normaloff>.</iconset>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnQuitarItem">
+              <property name="text">
+               <string> Quitar</string>
+              </property>
+              <property name="icon">
+               <iconset theme="go-previous">
+                <normaloff>.</normaloff>.</iconset>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QFormLayout" name="formLayout">
+            <property name="labelAlignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
+            <property name="formAlignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+            </property>
+            <property name="leftMargin">
+             <number>8</number>
+            </property>
+            <property name="topMargin">
+             <number>8</number>
+            </property>
+            <property name="rightMargin">
+             <number>8</number>
+            </property>
+            <property name="bottomMargin">
+             <number>8</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QLineEdit" name="lineEditCliente">
+              <property name="placeholderText">
+               <string>Nombre del Cliente</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0" colspan="2">
+             <widget class="QListWidget" name="listaOrdenActual"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>Descuento</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QComboBox" name="comboDescuentos"/>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="subTotalLabel">
+              <property name="text">
+               <string>Subtotal</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLabel" name="lblSubtotal">
+              <property name="layoutDirection">
+               <enum>Qt::LeftToRight</enum>
+              </property>
+              <property name="text">
+               <string>$ 00.00</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="igvLabel">
+              <property name="text">
+               <string>IGV (18%)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLabel" name="lblIGV">
+              <property name="text">
+               <string>$ 00.00</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="totalLabel">
+              <property name="font">
+               <font>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Total</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QLabel" name="lblTotal">
+              <property name="text">
+               <string>$ 00.00</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QPushButton" name="btnFinalizarPedido">
+              <property name="text">
+               <string>Finalizar Pedido</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_2">
+       <attribute name="title">
+        <string>Cocinero</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="leftMargin">
+           <number>8</number>
+          </property>
+          <property name="topMargin">
+           <number>8</number>
+          </property>
+          <property name="rightMargin">
+           <number>8</number>
+          </property>
+          <property name="bottomMargin">
+           <number>8</number>
+          </property>
+          <item>
+           <layout class="QVBoxLayout" name="ColaLayout">
+            <item>
+             <widget class="QPushButton" name="btnProcesarSiguientePedido">
+              <property name="text">
+               <string>Atender Siguiente Ticket</string>
+              </property>
+              <property name="icon">
+               <iconset theme="go-next"/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblCola">
+              <property name="font">
+               <font>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>En Cola</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QListWidget" name="listEnCola"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="ProcesandoLayout">
+            <item>
+             <widget class="QLabel" name="lblProcesando">
+              <property name="font">
+               <font>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Procesando</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QListWidget" name="listProcesando"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="ListoLayout">
+            <item>
+             <widget class="QLabel" name="lblListo">
+              <property name="font">
+               <font>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Listo</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QListWidget" name="listListo"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
      </widget>
-     <widget class="QListWidget" name="listaOrdenActual">
-      <property name="geometry">
-       <rect>
-        <x>450</x>
-        <y>20</y>
-        <width>221</width>
-        <height>121</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="lineEditCliente">
-      <property name="geometry">
-       <rect>
-        <x>450</x>
-        <y>160</y>
-        <width>151</width>
-        <height>26</height>
-       </rect>
-      </property>
-      <property name="placeholderText">
-       <string>Nombre del Cliente</string>
-      </property>
-     </widget>
-     <widget class="QComboBox" name="comboDescuentos">
-      <property name="geometry">
-       <rect>
-        <x>450</x>
-        <y>200</y>
-        <width>161</width>
-        <height>26</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="btnAnadirItem">
-      <property name="geometry">
-       <rect>
-        <x>320</x>
-        <y>40</y>
-        <width>101</width>
-        <height>26</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Añadir Item -&gt;</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="btnFinalizarPedido">
-      <property name="geometry">
-       <rect>
-        <x>450</x>
-        <y>240</y>
-        <width>121</width>
-        <height>26</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Finalizar Pedido</string>
-      </property>
-     </widget>
-    </widget>
-    <widget class="QWidget" name="tab_2">
-     <attribute name="title">
-      <string>Cocinero</string>
-     </attribute>
-     <widget class="QListWidget" name="listaColaPedidos">
-      <property name="geometry">
-       <rect>
-        <x>50</x>
-        <y>30</y>
-        <width>381</width>
-        <height>241</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="btnProcesarSiguientePedido">
-      <property name="geometry">
-       <rect>
-        <x>450</x>
-        <y>30</y>
-        <width>88</width>
-        <height>26</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Procesar</string>
-      </property>
-     </widget>
-    </widget>
-   </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>763</width>
+     <width>866</width>
      <height>23</height>
     </rect>
    </property>

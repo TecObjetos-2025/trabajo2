@@ -61,6 +61,10 @@ void MainWindow::conectarSenalesYSlots()
     connect(coreAdapter.get(), &CoreQtAdapter::nuevosPedidosEnCola,
             this, &MainWindow::onPedidosActualizados);
 
+    //
+    connect(coreAdapter.get(), &CoreQtAdapter::pedidoTerminado,
+            this, &MainWindow::onPedidosActualizados);
+
     // Conectar señal de error
     connect(coreAdapter.get(), &CoreQtAdapter::errorOcurrido,
             this, &MainWindow::onCoreError);
@@ -88,19 +92,68 @@ void MainWindow::cargarMenuEnUI()
 
 void MainWindow::cargarPedidosEnUI()
 {
-    ui->listaColaPedidos->clear();
-    auto pedidos = coreSistema->getPedidosEnCola();
+    // Limpiar las 3 listas
+    ui->listEnCola->clear();
+    ui->listProcesando->clear();
+    ui->listListo->clear();
+
+    auto pedidos = coreSistema->getPedidosActivos();
 
     for (const auto &pedido : pedidos)
     {
-        QString itemText = QString("ID: %1 | %2 | %3")
-                               .arg(pedido.id_pedido)
-                               .arg(QString::fromStdString(pedido.cliente))
-                               .arg(QString::fromStdString(pedido.estado));
-        QListWidgetItem *item = new QListWidgetItem(itemText);
-        // Se podria almacenar más data si es necesario
-        ui->listaColaPedidos->addItem(item);
+        QString textoTarjeta = QString("Pedido #%1\nCliente: %2\n")
+                                   .arg(pedido.id_pedido)
+                                   .arg(QString::fromStdString(pedido.cliente));
+        for (auto item : pedido.items)
+        {
+            textoTarjeta += QString("\n• %1 x%2")
+                                .arg(QString::fromStdString(item.nombreProducto))
+                                .arg(item.cantidad);
+        }
+
+        QListWidgetItem *tarjeta = new QListWidgetItem(textoTarjeta);
+
+        // Clasificacion de estado
+        if (pedido.estado == "En Cola")
+        {
+            ui->listEnCola->addItem(tarjeta);
+        }
+        else if (pedido.estado == "En Preparación")
+        {
+            tarjeta->setBackground(QColor("#fff3cd")); // Color de fondo amarillo claro
+            ui->listProcesando->addItem(tarjeta);
+        }
+        else if (pedido.estado == "Listo")
+        {
+
+            tarjeta->setBackground(QColor("#d4edda")); // Color de fondo verde claro
+            ui->listListo->addItem(tarjeta);
+        }
     }
+}
+
+void MainWindow::actualizarTotalesUI()
+{
+    double subtotal = 0.0;
+
+    for (int i = 0; i < ui->listaOrdenActual->count(); ++i)
+    {
+        QListWidgetItem *item = ui->listaOrdenActual->item(i);
+        double precio = item->data(RolePrecioUnitario).toDouble(); // Recuperar precio
+        subtotal += precio;
+    }
+
+    double tasaIGV = coreSistema->getPorcentajeIGV();
+
+    double montoIGV = subtotal * tasaIGV;
+    double total = subtotal + montoIGV;
+
+    // Actualizacion visual
+    ui->lblSubtotal->setText(QString("S/ %1").arg(subtotal, 0, 'f', 2));
+    ui->lblIGV->setText(QString("S/ %1").arg(montoIGV, 0, 'f', 2));
+
+    // Total en negrita
+    ui->lblTotal->setText(QString("S/ %1").arg(total, 0, 'f', 2));
 }
 
 // --- Slots de la UI
@@ -116,9 +169,43 @@ void MainWindow::on_btnAnadirItem_clicked()
         return;
     }
 
+    int id = itemSeleccionado->data(Qt::UserRole).toInt();
+
+    // Recuperar precio, forma sucia (puede mejorarse)
+    QString texto = itemSeleccionado->text();
+    int posMoneda = texto.lastIndexOf("S/");
+    int posFin = texto.lastIndexOf(")");
+    // qDebug() << "Posicion de S/: " << posMoneda;
+    // qDebug() << "Texto a partir de Posicion " << texto.mid(posMoneda);
+    double precio = texto.mid(posMoneda + 2, posFin - posMoneda - 2).toDouble();
+
+    qDebug() << "[MainWindow] Añadiendo ítem al pedido actual: ID =" << id << ", Precio =" << precio;
+
+    // Crear el item visual
+    QListWidgetItem *newItem = new QListWidgetItem(itemSeleccionado->text());
+    newItem->setData(Qt::UserRole, id);
+    newItem->setData(Qt::UserRole + 1, precio); // Guardar precio
+
     // Anadir al pedido actual
-    ui->listaOrdenActual->addItem(itemSeleccionado->clone());
+    ui->listaOrdenActual->addItem(newItem);
     qDebug() << "[MainWindow] Ítem añadido al pedido actual.";
+    actualizarTotalesUI();
+}
+
+void MainWindow::on_btnQuitarItem_clicked()
+{
+    // Obtener la fila actual
+    int fila = ui->listaOrdenActual->currentRow();
+
+    if (fila >= 0)
+    {
+        // 'takeItem' elimina el ítem de la lista pero no borra la memoria
+        QListWidgetItem *item = ui->listaOrdenActual->takeItem(fila);
+        delete item; // Liberar memoria manual
+
+        // Recalcular
+        actualizarTotalesUI();
+    }
 }
 
 void MainWindow::on_btnFinalizarPedido_clicked()

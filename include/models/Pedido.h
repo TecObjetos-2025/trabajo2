@@ -23,6 +23,7 @@ class Pedido
 {
 private:
     int id;                                         ///< Identificador único del pedido
+    bool pagado{false};                             ///< Indica si el pedido ha sido pagado
     std::weak_ptr<Cliente> cliente;                 ///< Referencia al cliente que realizó el pedido
     std::vector<std::unique_ptr<ItemPedido>> items; ///< Lista de ítems del pedido
 
@@ -47,6 +48,9 @@ public:
     ~Pedido();
 
     int getId() const;
+
+    bool isPagado() const { return pagado; }
+
     std::shared_ptr<Cliente> getCliente() const;
     const std::vector<std::unique_ptr<ItemPedido>> &getItems() const;
 

@@ -22,6 +22,12 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+    enum ItemDataRoles
+    {
+        RoleProductoId = Qt::UserRole,
+        RolePrecioUnitario = Qt::UserRole + 1
+    };
+
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -52,6 +58,11 @@ private:
     void cargarPedidosEnUI();
 
     /**
+     * @brief actualizarTotalesUI Actualiza los totales del pedido actual en la UI.
+     */
+    void actualizarTotalesUI();
+
+    /**
      * @brief conectarSenalesYSlots Conecta las señales y slots necesarios entre la UI y el core.
      */
     void conectarSenalesYSlots();
@@ -67,6 +78,11 @@ private slots:
      * @brief on_btnAnadirItem_clicked Slot llamado al hacer clic en el botón "Añadir Ítem".
      */
     void on_btnAnadirItem_clicked();
+
+    /**
+     * @brief on_btnQuitarItem_clicked Slot llamado al hacer clic en el botón "Quitar Ítem".
+     */
+    void on_btnQuitarItem_clicked();
 
     // Slots "Vista Cocina"
     /**

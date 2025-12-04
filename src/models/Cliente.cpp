@@ -1,3 +1,11 @@
+/**
+ * @file Cliente.cpp
+ * @brief Implementación de la clase Cliente que hereda de Persona.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @date 2025
+ * @details Esta clase representa a un cliente de la cafetería con información adicional como el teléfono.
+ */
+
 #include "models/Cliente.h"
 #include <iostream>
 

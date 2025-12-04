@@ -1,3 +1,11 @@
+/**
+ * @file Producto.cpp
+ * @brief Implementación de la clase Producto que representa un producto en el sistema.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @date 2025
+ * @details Esta clase maneja la información básica de un producto, incluyendo su ID, nombre, precio y categoría.
+ */
+
 #include "models/Producto.h"
 
 Producto::Producto(int id, const std::string &nombre, double precio, const std::string &categoria)

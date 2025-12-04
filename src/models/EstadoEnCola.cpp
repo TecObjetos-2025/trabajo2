@@ -1,3 +1,10 @@
+/**
+ * @file EstadoEnCola.cpp
+ * @brief Implementación del estado "En Cola" para un pedido.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @date 2025
+ * @details Esta clase implementa el patrón State para manejar el estado "En Cola" de un pedido.
+ */
 #include "../../include/models/EstadoEnCola.h"
 #include "../../include/models/EstadoEnPreparacion.h"
 #include "../../include/models/EstadoCancelado.h"

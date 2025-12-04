@@ -51,6 +51,11 @@ private:
      */
     std::atomic<int> proximoIdPersona{1};
 
+    /**
+     * @brief Pedidos activos en el sistema.
+     */
+    std::vector<std::shared_ptr<Pedido>> listaMaestraPedidos;
+
 public:
     SistemaPedidos();
     ~SistemaPedidos();
@@ -113,6 +118,9 @@ public:
     // Métodos API
     std::vector<InfoProducto> getMenu() override;
     std::vector<InfoDescuento> getDescuentosDisponibles() override;
+
+    double getPorcentajeIGV() const override;
+
     /**
      * @brief Finaliza un pedido a partir de los datos del cliente y los ítems, aplicando descuentos.
      * @param cliente Nombre o identificador del cliente.
@@ -122,7 +130,8 @@ public:
     void finalizarPedido(const std::string &cliente,
                          const std::vector<ItemPedidoCrear> &items,
                          const std::string &id_descuentos) override;
-    std::vector<InfoPedido> getPedidosEnCola() override;
+
+    std::vector<InfoPedido> getPedidosActivos() override;
 
     /**
      * @brief Procesa el siguiente pedido en la cola de espera y lo notifica a los observadores.

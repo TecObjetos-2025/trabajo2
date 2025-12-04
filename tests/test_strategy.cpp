@@ -3,7 +3,14 @@
 #include "patterns/DescuentoFijo.h"
 #include "patterns/DescuentoNulo.h"
 
-// Unit Test for Strategy Pattern
+/**
+ * @file test_strategy.cpp
+ * @brief Pruebas unitarias para las estrategias de descuento utilizando Google Test.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @date 2025
+ * @details Este archivo contiene pruebas para verificar el correcto funcionamiento
+ * de las diferentes estrategias de descuento implementadas en el sistema.
+ */
 
 TEST(StrategyTest, PercentageDiscountCalculatesCorrectly)
 {

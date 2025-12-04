@@ -5,6 +5,15 @@
 #include "models/EstadoEnPreparacion.h"
 #include "models/EstadoListo.h"
 
+/**
+ * @file test_state.cpp
+ * @brief Pruebas unitarias para el patrón State en la clase Pedido utilizando Google Test.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @date 2025
+ * @details Este archivo contiene pruebas para verificar las transiciones de estado
+ * en la clase Pedido conforme al patrón State.
+ */
+
 // Ayuda para crear un cliente dummy
 std::shared_ptr<Cliente> createDummyClient()
 {
@@ -30,7 +39,7 @@ TEST(StateTest, TransitionQueuedToInPreparation)
 
     pedido.avanzar();
 
-    EXPECT_EQ(pedido.getEstadoNombre(), "En Preparacion");
+    EXPECT_EQ(pedido.getEstadoNombre(), "En Preparación");
 }
 
 TEST(StateTest, TransitionInPreparationToReady)
@@ -80,5 +89,5 @@ TEST(StateTest, CannotCancelInPreparation)
     pedido.cancelar(); // Debería no cambiar
 
     EXPECT_EQ(pedido.getEstadoNombre(), stateBefore);
-    EXPECT_EQ(pedido.getEstadoNombre(), "En Preparacion");
+    EXPECT_EQ(pedido.getEstadoNombre(), "En Preparación");
 }
