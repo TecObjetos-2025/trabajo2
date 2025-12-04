@@ -5,6 +5,15 @@
 #include "models/Cocinero.h"
 #include "models/Administrador.h"
 
+/**
+ * @file test_factory.cpp
+ * @brief Pruebas unitarias para la CafeteriaFactory utilizando Google Test.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @date 2025
+ * @details Este archivo contiene pruebas para verificar la correcta creación de objetos
+ * mediante la CafeteriaFactory.
+ */
+
 TEST(FactoryTest, CreateCliente)
 {
     auto cliente = CafeteriaFactory::crearCliente(1, "Juan", "555-1234");

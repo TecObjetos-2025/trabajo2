@@ -81,3 +81,8 @@ CMakeUserPresets.json
 build/cafeteria.out
 
 build/*
+
+# --- Documentación Doxygen ---
+html/
+latex/
+doxygen_warnings.log

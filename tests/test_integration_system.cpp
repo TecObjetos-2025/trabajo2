@@ -9,6 +9,16 @@
 #include <atomic>
 #include <chrono>
 
+/**
+ * @file test_integration_system.cpp
+ * @brief Pruebas de integración para el sistema de gestión de pedidos.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @date 2025
+ * @details Este archivo contiene pruebas de integración que verifican el flujo completo
+ * desde la creación de un pedido hasta su procesamiento por un cocinero, incluyendo
+ * la notificación a los observadores.
+ */
+
 // Mock Observer
 class MockObservador : public IObservadorCore
 {

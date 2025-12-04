@@ -5,6 +5,15 @@
 #include <atomic>
 #include <chrono>
 
+/**
+ * @file test_concurrency.cpp
+ * @brief Pruebas unitarias para la clase ColaThreadSafe utilizando Google Test.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @date 2025
+ * @details Este archivo contiene pruebas para verificar el correcto funcionamiento
+ * de la clase ColaThreadSafe en escenarios de concurrencia con múltiples hilos.
+ */
+
 TEST(ConcurrencyTest, BasicPushPop)
 {
     ColaThreadSafe<int> cola;
