@@ -204,6 +204,8 @@ void SistemaPedidos::finalizarPedido(std::shared_ptr<Pedido> pedido)
                   << " agregado a la cola de pedidos en espera." << std::endl;
         pedidos_en_espera.push(pedido);
 
+        listaMaestraPedidos.push_back(pedido);
+
         std::cout << "Notificando..." << std::endl;
         notificarObservadores(pedido.get());
     }
@@ -320,22 +322,24 @@ void SistemaPedidos::finalizarPedido(
               << std::fixed << std::setprecision(2)
               << pedido->calcularTotal()
               << std::endl;
+
+    listaMaestraPedidos.push_back(pedido);
     pedidos_en_espera.push(pedido);
+
     notificarObservadores(pedido.get());
 }
 
-std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
+std::vector<InfoPedido> SistemaPedidos::getPedidosActivos()
 {
     std::vector<InfoPedido> pedidosDTO;
-    std::deque<std::shared_ptr<Pedido>> snapshot = pedidos_en_espera.snapshot();
 
-    for (const auto &pedido : snapshot)
+    for (const auto &pedido : this->listaMaestraPedidos)
     {
         InfoPedido dto;
         dto.id_pedido = pedido->getId();
         dto.cliente = pedido->getCliente()
                           ? pedido->getCliente()->getNombre()
-                          : "";
+                          : "Cliente Anonimo";
 
         dto.estado = pedido->getEstadoNombre();
 
@@ -354,8 +358,33 @@ std::vector<InfoPedido> SistemaPedidos::getPedidosEnCola()
 
 void SistemaPedidos::procesarSiguientePedido()
 {
-    auto pedidoProcesado = procesarSiguientePedidoInterno();
-    notificarObservadores(pedidoProcesado.get());
+    auto pedido = procesarSiguientePedidoInterno();
+
+    if (pedido)
+    {
+        std::cout << "[SISTEMA] Procesando pedido #" << pedido->getId() << "..." << std::endl;
+
+        pedido->avanzar(); // Estado: En Cola -> En Preparacion
+
+        notificarObservadores(pedido.get());
+
+        std::thread([this, pedido]()
+                    {
+            std::this_thread::sleep_for(std::chrono::seconds(8)); // Simular tiempo de preparación
+
+            std::cout << "[SIMULACION COCINA] Preparando pedido #" << pedido->getId() << "..." << std::endl;
+
+            pedido->avanzar(); // Estado: En Preparacion -> Listo
+
+            std::cout << "[SISTEMA] Pedido #" << pedido->getId() << " listo." << std::endl;
+
+            notificarPedidoTerminado(pedido); })
+            .detach();
+    }
+    else
+    {
+        std::cout << "[SIMULACION COCINA] No hay pedidos para procesar." << std::endl;
+    }
 }
 
 /**

@@ -50,7 +50,7 @@ public:
     /**
      * Obtiene la lista de pedidos que están en cola para ser preparados.
      */
-    virtual std::vector<InfoPedido> getPedidosEnCola() = 0;
+    virtual std::vector<InfoPedido> getPedidosActivos() = 0;
 
     /**
      * Intentar procesar el siguiente pedido en cola.
