@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 
         /* Barra de Pestañas */
         QTabBar::tab {
-            background: #F8F9FA;
+            background-color: #F8F9FA;
             border: 1px solid #dee2e6;
             border-bottom-color: #dee2e6; /* Sin seleccionar */
             border-top-left-radius: 8px;
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
             font-weight: bold;
         }
         QTabBar::tab:selected {
-            background: #FFFFFF;
+            background-color: #FFFFFF;
             border-bottom-color: #FFFFFF; /* Se fusiona con el panel */
             color: #387ADF; /* Azul Primario */
         }
@@ -151,7 +151,6 @@ int main(int argc, char *argv[])
             border-radius: 8px;
             margin-bottom: 8px; /* Espacio entre tarjetas */
             color: #111813;
-            padding: 10px;
         }
 
         /* Diferenciación sutil por estado (Opcional) */
