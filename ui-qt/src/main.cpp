@@ -1,19 +1,21 @@
 #include "mainwindow.h"
 
 #include <QApplication>
+#include <QStyleFactory>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
+    a.setStyle(QStyleFactory::create("Fusion"));
     // --- ESTILO "LA ESQUINA MODERNA" ---
-    // Colores extraídos de tu diseño HTML/Tailwind
     // Primary (Azul): #387ADF | Accent (Naranja): #F5821F | Background: #F8F9FA
 
     a.setStyleSheet(R"(
         /* Fondo General de la Aplicación */
         QMainWindow {
             background-color: #F8F9FA;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         /* Paneles y Pestañas (Simulando las tarjetas blancas) */
