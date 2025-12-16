@@ -6,8 +6,8 @@
  * @details Esta clase implementa el patrón State para manejar el estado "Listo" de un pedido.
  */
 
-#include "../../include/models/EstadoListo.h"
-#include "../../include/models/Pedido.h"
+#include "patterns/EstadoListo.h"
+#include "models/Pedido.h"
 #include <iostream>
 
 using namespace std;

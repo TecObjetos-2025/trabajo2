@@ -10,7 +10,7 @@
 #include "models/Pedido.h"
 #include "models/Cliente.h"
 #include "models/ItemPedido.h"
-#include "models/EstadoEnCola.h" // Estado inicial del pedido
+#include "patterns/EstadoEnCola.h" // Estado inicial del pedido
 #include "patterns/DescuentoNulo.h"
 #include "core/Configuracion.h"
 #include <iostream>
@@ -108,7 +108,7 @@ std::string Pedido::getEstadoNombre() const
  * Utilizado internamente por los estados concretos para modificar el contexto.
  * @param nuevoEstado Nuevo estado a asignar
  */
-void Pedido::setEstado(std::shared_ptr<EstadoPedido> nuevoEstado)
+void Pedido::setEstado(std::shared_ptr<IEstadoPedido> nuevoEstado)
 {
     std::cout << "INFO: Pedido #" << id << " transiciona de '"
               << estadoActual->getNombre() << "' a '" << nuevoEstado->getNombre() << "'." << std::endl;
@@ -117,7 +117,7 @@ void Pedido::setEstado(std::shared_ptr<EstadoPedido> nuevoEstado)
 
 /**
  * @brief Avanza el estado del pedido según la lógica del estado actual
- * Delegado al objeto EstadoPedido correspondiente.
+ * Delegado al objeto IEstadoPedido correspondiente.
  */
 void Pedido::avanzar()
 {
@@ -126,7 +126,7 @@ void Pedido::avanzar()
 
 /**
  * @brief Cancela el pedido si el estado actual lo permite
- * Delegado al objeto EstadoPedido correspondiente.
+ * Delegado al objeto IEstadoPedido correspondiente.
  */
 void Pedido::cancelar()
 {

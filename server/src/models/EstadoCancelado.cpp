@@ -5,8 +5,8 @@
  * @date 2025
  * @details Esta clase implementa el patrón State para manejar el estado "Cancelado" de un pedido.
  */
-#include "../../include/models/EstadoCancelado.h"
-#include "../../include/models/Pedido.h"
+#include "patterns/EstadoCancelado.h"
+#include "models/Pedido.h"
 #include <iostream>
 
 using namespace std;

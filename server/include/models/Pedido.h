@@ -6,14 +6,11 @@
 #include <string>
 #include <memory>
 #include "patterns/IEstrategiaDescuento.h"
-
-// Implementación del patrón State para la gestión dinámica de estados de Pedido.
-#include "core/EstadoPedido.h"
+#include "patterns/IEstadoPedido.h"
 
 class Cliente;
 class ItemPedido;
 class Producto;
-// Ya no es necesario 'class EstadoPedido;' porque el .h ya está incluido arriba
 
 /**
  * @brief Clase Pedido
@@ -31,7 +28,7 @@ private:
      * @brief Estado actual del pedido
      * Gestionado mediante el patrón State. Permite cambiar el comportamiento del pedido según su estado concreto.
      */
-    std::shared_ptr<EstadoPedido> estadoActual;
+    std::shared_ptr<IEstadoPedido> estadoActual;
 
     std::unique_ptr<IEstrategiaDescuento> estrategiaDescuento; ///< Estrategia de descuento (Strategy)
 
@@ -62,13 +59,13 @@ public:
 
     /**
      * @brief Avanza el estado del pedido según la lógica del estado actual
-     * Delegado al objeto EstadoPedido correspondiente.
+     * Delegado al objeto IEstadoPedido correspondiente.
      */
     void avanzar();
 
     /**
      * @brief Cancela el pedido si el estado actual lo permite
-     * Delegado al objeto EstadoPedido correspondiente.
+     * Delegado al objeto IEstadoPedido correspondiente.
      */
     void cancelar();
 
@@ -77,7 +74,7 @@ public:
      * Utilizado por los estados concretos para modificar el contexto.
      * @param nuevoEstado Nuevo estado a asignar
      */
-    void setEstado(std::shared_ptr<EstadoPedido> nuevoEstado);
+    void setEstado(std::shared_ptr<IEstadoPedido> nuevoEstado);
 
     void agregarItem(std::shared_ptr<Producto> producto, int cantidad);
     double calcularTotal() const;

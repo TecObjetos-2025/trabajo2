@@ -5,10 +5,10 @@
  * @date 2025
  * @details Esta clase implementa el patrón State para manejar el estado "En Cola" de un pedido.
  */
-#include "../../include/models/EstadoEnCola.h"
-#include "../../include/models/EstadoEnPreparacion.h"
-#include "../../include/models/EstadoCancelado.h"
-#include "../../include/models/Pedido.h"
+#include "patterns/EstadoEnCola.h"
+#include "patterns/EstadoEnPreparacion.h"
+#include "patterns/EstadoCancelado.h"
+#include "models/Pedido.h"
 #include <iostream>
 
 using namespace std;

@@ -5,9 +5,9 @@
  * @date 2025
  * @details Esta clase implementa el patrón State para manejar el estado "En Preparación" de un pedido.
  */
-#include "../../include/models/EstadoEnPreparacion.h"
-#include "../../include/models/EstadoListo.h"
-#include "../../include/models/Pedido.h"
+#include "patterns/EstadoEnPreparacion.h"
+#include "patterns/EstadoListo.h"
+#include "models/Pedido.h"
 #include <iostream>
 
 using namespace std;
