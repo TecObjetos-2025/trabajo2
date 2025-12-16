@@ -8,12 +8,34 @@ file(GLOB TEST_SOURCES
     "test_*.cpp"
 )
 
-# Agregar fuente de DatabaseManager para TDD
 file(GLOB DBMANAGER_SRC "../server/src/db/DatabaseManager.cpp")
+
+# Archivos del servidor necesarios para las pruebas
+set(SERVER_SOURCES
+    ../server/src/core/CafeteriaFactory.cpp
+    ../server/src/core/MenuCafeteria.cpp
+    ../server/src/core/SistemaPedidos.cpp
+    ../server/src/models/Administrador.cpp
+    ../server/src/models/Cliente.cpp
+    ../server/src/models/Cocinero.cpp
+    ../server/src/models/Empleado.cpp
+    ../server/src/models/EstadoCancelado.cpp
+    ../server/src/models/EstadoEnCola.cpp
+    ../server/src/models/EstadoEnPreparacion.cpp
+    ../server/src/models/EstadoListo.cpp
+    ../server/src/models/ItemPedido.cpp
+    ../server/src/models/Pedido.cpp
+    ../server/src/models/Persona.cpp
+    ../server/src/models/Producto.cpp
+    ../server/src/patterns/DescuentoFijo.cpp
+    ../server/src/patterns/DescuentoNulo.cpp
+    ../server/src/patterns/DescuentoPorcentaje.cpp 
+)
 
 add_executable(unit_tests
     ${TEST_SOURCES}
     ${DBMANAGER_SRC}
+    ${SERVER_SOURCES}
 )
 
 target_include_directories(unit_tests PRIVATE
