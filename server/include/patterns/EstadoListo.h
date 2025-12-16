@@ -1,14 +1,14 @@
 #ifndef ESTADOLISTO_H
 #define ESTADOLISTO_H
 
-#include "core/EstadoPedido.h"
+#include "IEstadoPedido.h"
 
 /**
  * @brief Estado concreto "Listo" para el patrón State de Pedido.
  * Representa el estado donde el pedido está listo para ser entregado.
  * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
  */
-class EstadoListo : public EstadoPedido
+class EstadoListo : public IEstadoPedido
 {
 public:
     void avanzar(Pedido *pedido) override;  // Ya no avanza más (o pasa a 'Entregado')

@@ -2,13 +2,13 @@
 #ifndef ESTADOENCOLA_H
 #define ESTADOENCOLA_H
 
-#include "core/EstadoPedido.h"
+#include "IEstadoPedido.h"
 
 /**
  * @brief Estado concreto "En Cola" para el patrón State de Pedido.
  * Representa el estado inicial de un pedido, donde aún puede ser cancelado.
  */
-class EstadoEnCola : public EstadoPedido
+class EstadoEnCola : public IEstadoPedido
 {
 public:
     /**

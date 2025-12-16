@@ -2,13 +2,13 @@
 #ifndef ESTADOENPREPARACION_H
 #define ESTADOENPREPARACION_H
 
-#include "core/EstadoPedido.h"
+#include "IEstadoPedido.h"
 
 /**
  * @brief Estado concreto "En Preparación" para el patrón State de Pedido.
  * Representa el estado donde el pedido está siendo preparado y no puede ser cancelado.
  */
-class EstadoEnPreparacion : public EstadoPedido
+class EstadoEnPreparacion : public IEstadoPedido
 {
 public:
     /**
