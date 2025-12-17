@@ -24,6 +24,7 @@
 #include "patterns/DescuentoFijo.h"
 #include "core/CafeteriaFactory.h"
 #include "core/Configuracion.h"
+#include "db/DatabaseManager.h"
 
 // Función auxiliar para convertir ItemPedido a ItemPedidoInfo
 static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
@@ -64,16 +65,13 @@ void SistemaPedidos::mostrarMenu() const
 
 void SistemaPedidos::inicializarMenu()
 {
-    // Inilizacion el menu y sincronizar con la lista de productos del sistema
-    std::vector<Producto> productosPorDefecto = {
-        Producto(1, "Cafe Americano", 2.50, "Bebidas"),
-        Producto(2, "Cafe Expresso", 3.00, "Bebidas"),
-        Producto(3, "Pan con Chicharron", 3.20, "Desayuno"),
-        Producto(4, "Cheesecake", 4.50, "Postres"),
-        Producto(5, "Jugo de Naranja", 2.00, "Bebidas")};
-
-    for (const auto &prod : productosPorDefecto)
+    // Cargar productos desde la base de datos usando DatabaseManager
+    productos.clear();
+    menu = std::make_unique<MenuCafeteria>();
+    auto productosDTO = DatabaseManager::instance().getProductos();
+    for (const auto &dto : productosDTO)
     {
+        Producto prod(dto.id, dto.nombre, dto.precio, ""); // La categoría puede omitirse o mapearse si se agrega al DTO
         menu->agregarProducto(prod);
         productos.push_back(std::make_shared<Producto>(prod));
     }

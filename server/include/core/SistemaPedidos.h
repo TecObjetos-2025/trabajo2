@@ -18,6 +18,8 @@ class MenuCafeteria;
 class SistemaPedidos : public ICoreSistema
 {
 public:
+    // Solo para pruebas: acceso read-only a productos
+    const std::vector<std::shared_ptr<Producto>>& getProductos() const { return productos; }
     void cerrarColaPedidos() { pedidos_en_espera.cerrar(); }
 
 private:
