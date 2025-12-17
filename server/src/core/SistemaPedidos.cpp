@@ -24,7 +24,7 @@
 #include "core/Configuracion.h"
 
 /**
- * @brief Clase principal para la gestión de pedidos, clientes y notificaciones en la cafetería.
+ * @brief Clase principal del sistema de gestión de pedidos.
  * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
  * @details Permite registrar personas, clientes, crear pedidos y notificar observadores (patrón Observer).
  */

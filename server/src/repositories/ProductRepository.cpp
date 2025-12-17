@@ -2,6 +2,12 @@
 #include "db/DatabaseManager.h"
 #include <iostream>
 
+/**
+ * @brief Repositorio para gestionar productos en memoria y cargar desde la base de datos.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @details Permite cargar productos desde la base de datos y acceder a ellos mediante un caché en memoria.
+ */
+
 ProductRepository::ProductRepository() {}
 
 void ProductRepository::loadFromDB()

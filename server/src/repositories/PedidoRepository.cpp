@@ -5,6 +5,12 @@
 #include "models/Cliente.h"
 #include <iostream>
 
+/**
+ * @brief Repositorio para gestionar pedidos: historial y cola de cocina.
+ * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
+ * @details Permite persistir pedidos en la base de datos, mantener un historial en memoria y gestionar una cola de pedidos para la cocina.
+ */
+
 // Funciones auxiliares
 // Convertir ItemPedido a ItemPedidoInfo
 static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
