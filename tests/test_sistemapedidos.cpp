@@ -57,9 +57,22 @@ TEST(SistemaPedidosTest, FinalizarPedidoPersisteEnDB)
     // Simular finalizarPedido (a implementar: debe guardar en DB)
     sistema.finalizarPedido(pedido);
 
+    // Buscar el id real de 'Carlos Juarez' en la tabla customers
+    int clienteId = -1;
+    {
+        QSqlQuery q(db.database());
+        q.prepare("SELECT id FROM customers WHERE name = ?");
+        q.addBindValue("Carlos Juarez");
+        if (q.exec() && q.next())
+        {
+            clienteId = q.value(0).toInt();
+        }
+    }
+    ASSERT_NE(clienteId, -1);
+
     // Verificar que el pedido fue insertado en la tabla orders
     QSqlQuery query(db.database());
-    ASSERT_TRUE(query.exec("SELECT COUNT(*) FROM orders WHERE customer_id = 1"));
+    ASSERT_TRUE(query.exec(QString("SELECT COUNT(*) FROM orders WHERE customer_id = %1").arg(clienteId)));
     ASSERT_TRUE(query.next());
     int count = query.value(0).toInt();
     EXPECT_GT(count, 0);
