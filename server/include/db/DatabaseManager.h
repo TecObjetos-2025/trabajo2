@@ -1,5 +1,6 @@
 #pragma once
 #include <QtSql/QSqlDatabase>
+#include "api/ApiDTOs.h"
 
 class DatabaseManager
 {
@@ -8,6 +9,9 @@ public:
     bool inicializarTablas();
     bool seedData();
     QSqlDatabase &database();
+
+    // Devuelve todos los productos activos como DTO
+    std::vector<InfoProducto> getProductos();
 
 private:
     DatabaseManager();

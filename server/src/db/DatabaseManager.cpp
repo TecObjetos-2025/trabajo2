@@ -2,6 +2,7 @@
 #include <QtSql/QSqlQuery>
 #include <QtSql/QSqlError>
 #include <QDebug>
+#include <QFile>
 
 DatabaseManager::DatabaseManager()
 {
@@ -118,6 +119,49 @@ bool DatabaseManager::inicializarTablas()
 
 bool DatabaseManager::seedData()
 {
-    // Esqueleto: solo retorna true por ahora
+    QFile file(":/server/db/seed.sql");
+    if (!file.exists())
+    {
+        file.setFileName("../server/db/seed.sql"); // fallback para ejecución desde build
+    }
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qWarning() << "No se pudo abrir seed.sql:" << file.errorString();
+        return false;
+    }
+    QString sql = file.readAll();
+    file.close();
+
+    QStringList statements = sql.split(';', Qt::SkipEmptyParts);
+    QSqlQuery query(m_db);
+    for (QString stmt : statements)
+    {
+        stmt = stmt.trimmed();
+        if (stmt.isEmpty())
+            continue;
+        if (!query.exec(stmt))
+        {
+            qWarning() << "Error ejecutando seedData SQL:" << query.lastError().text() << "\nQuery:" << stmt;
+            return false;
+        }
+    }
     return true;
+}
+
+std::vector<InfoProducto> DatabaseManager::getProductos()
+{
+    std::vector<InfoProducto> productos;
+    QSqlQuery query(m_db);
+    if (query.exec("SELECT id, name, price FROM products WHERE active = 1"))
+    {
+        while (query.next())
+        {
+            InfoProducto dto;
+            dto.id = query.value(0).toInt();
+            dto.nombre = query.value(1).toString().toStdString();
+            dto.precio = query.value(2).toDouble();
+            productos.push_back(dto);
+        }
+    }
+    return productos;
 }
