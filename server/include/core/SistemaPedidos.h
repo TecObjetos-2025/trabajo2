@@ -4,11 +4,11 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include "ColaThreadSafe.h"
 #include "api/ICoreSistema.h"
 #include "api/IObservadorCore.h"
 #include <atomic>
 #include "repositories/ProductRepository.h"
+#include "repositories/PedidoRepository.h"
 
 class Persona;
 class Pedido;
@@ -20,7 +20,7 @@ class SistemaPedidos : public ICoreSistema
 public:
     // Solo para pruebas: acceso read-only a productos (redirige al repositorio)
     std::vector<std::shared_ptr<Producto>> getProductos() const;
-    void cerrarColaPedidos() { pedidos_en_espera.cerrar(); }
+    void cerrarColaPedidos();
 
 private:
     /**
@@ -29,14 +29,14 @@ private:
     std::shared_ptr<ProductRepository> productRepository;
 
     /**
+     * @brief Repositorio de pedidos (historial y cola).
+     */
+    std::shared_ptr<PedidoRepository> pedidoRepository;
+
+    /**
      * @brief Personas registradas en el sistema (clientes, empleados, etc.).
      */
     std::vector<std::shared_ptr<Persona>> personas;
-
-    /**
-     * @brief Cola de pedidos en espera, gestionada de forma thread-safe.
-     */
-    ColaThreadSafe<std::shared_ptr<Pedido>> pedidos_en_espera;
 
     /**
      * @brief Observadores registrados para recibir notificaciones de cambios en pedidos.
@@ -48,13 +48,8 @@ private:
      */
     std::atomic<int> proximoIdPersona{1};
 
-    /**
-     * @brief Pedidos activos en el sistema.
-     */
-    std::vector<std::shared_ptr<Pedido>> listaMaestraPedidos;
-
 public:
-    SistemaPedidos(std::shared_ptr<ProductRepository> repo);
+    SistemaPedidos(std::shared_ptr<ProductRepository> prodRepo, std::shared_ptr<PedidoRepository> orderRepo);
     ~SistemaPedidos();
 
     // Delegación y gestión

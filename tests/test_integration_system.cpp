@@ -6,6 +6,7 @@
 #include "models/Cocinero.h"
 #include "api/IObservadorCore.h"
 #include "repositories/ProductRepository.h"
+#include "repositories/PedidoRepository.h"
 #include <thread>
 #include <atomic>
 #include <chrono>
@@ -49,7 +50,8 @@ TEST(IntegrationTest, FullSystemFlow)
 {
     // Crear y cargar repositorio (o dejarlo vacio y usar agregarProducto)
     auto repo = std::make_shared<ProductRepository>();
-    SistemaPedidos sistema(repo);
+    auto orderRepo = std::make_shared<PedidoRepository>();
+    SistemaPedidos sistema(repo, orderRepo);
 
     // 1. Setear Datos
     auto prod1 = std::make_shared<Producto>(1, "Cafe", 5.0, "Bebidas");

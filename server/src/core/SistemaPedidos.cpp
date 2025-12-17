@@ -23,7 +23,8 @@
 #include "patterns/DescuentoFijo.h"
 #include "core/CafeteriaFactory.h"
 #include "core/Configuracion.h"
-#include "db/DatabaseManager.h"
+// DatabaseManager is no longer needed here thanks to Repositories
+// #include "db/DatabaseManager.h"
 
 // Funciones auxiliares
 // Convertir ItemPedido a ItemPedidoInfo
@@ -69,8 +70,8 @@ static InfoPedido convertirPedido(const Pedido *pedido)
  * @details Permite registrar personas, clientes, crear pedidos y notificar observadores (patrón Observer).
  */
 // Constructor
-SistemaPedidos::SistemaPedidos(std::shared_ptr<ProductRepository> repo)
-    : productRepository(repo)
+SistemaPedidos::SistemaPedidos(std::shared_ptr<ProductRepository> prodRepo, std::shared_ptr<PedidoRepository> orderRepo)
+    : productRepository(prodRepo), pedidoRepository(orderRepo)
 {
 }
 
@@ -108,6 +109,11 @@ void SistemaPedidos::mostrarMenu() const
 std::vector<std::shared_ptr<Producto>> SistemaPedidos::getProductos() const
 {
     return productRepository->getAll();
+}
+
+void SistemaPedidos::cerrarColaPedidos()
+{
+    pedidoRepository->closeKitchenQueue();
 }
 
 // Nueva gestion
@@ -182,16 +188,13 @@ void SistemaPedidos::finalizarPedido(std::shared_ptr<Pedido> pedido)
         std::cout << "Pedido #" << pedido->getId()
                   << " finalizado y marcado como PAGADO." << std::endl;
 
-        InfoPedido dto = convertirPedido(pedido.get());
+        // Persist to DB and add to History via Repository
+        pedidoRepository->save(pedido);
 
-        DatabaseManager::instance().savePedido(dto);
-
-        // Agregar a la cola de pedidos en espera (NUEVO)
+        // Add to Kitchen Queue via Repository
         std::cout << "[SISTEMA] Pedido #" << pedido->getId()
                   << " agregado a la cola de pedidos en espera." << std::endl;
-        pedidos_en_espera.push(pedido);
-
-        listaMaestraPedidos.push_back(pedido);
+        pedidoRepository->queueForKitchen(pedido);
 
         std::cout << "Notificando..." << std::endl;
         notificarObservadores(pedido.get());
@@ -311,8 +314,11 @@ void SistemaPedidos::finalizarPedido(
               << pedido->calcularTotal()
               << std::endl;
 
-    listaMaestraPedidos.push_back(pedido);
-    pedidos_en_espera.push(pedido);
+    // Persist to DB and add to History via Repository
+    pedidoRepository->save(pedido);
+
+    // Add to Kitchen Queue via Repository
+    pedidoRepository->queueForKitchen(pedido);
 
     notificarObservadores(pedido.get());
 }
@@ -321,7 +327,8 @@ std::vector<InfoPedido> SistemaPedidos::getPedidosActivos()
 {
     std::vector<InfoPedido> pedidosDTO;
 
-    for (const auto &pedido : this->listaMaestraPedidos)
+    auto listaMaestraPedidos = pedidoRepository->getHistory();
+    for (const auto &pedido : listaMaestraPedidos)
     {
         InfoPedido dto;
         dto.id_pedido = pedido->getId();
@@ -383,8 +390,8 @@ std::shared_ptr<Pedido> SistemaPedidos::procesarSiguientePedidoInterno()
 {
     std::cout << "\n[COCINERO] Buscando nuevo pedido en la cola..." << std::endl;
 
-    std::shared_ptr<Pedido> pedido;
-    if (pedidos_en_espera.tryPop(pedido))
+    std::shared_ptr<Pedido> pedido = pedidoRepository->nextForKitchen();
+    if (pedido)
     {
         std::cout << "[COCINERO] Pedido #"
                   << pedido->getId()
@@ -420,7 +427,7 @@ void SistemaPedidos::mostrarPedidosEnEspera() const
     std::cout << "\n --- ESTADO ACTUAL DE LA COLA DE PEDIDOS EN ESPERA --- "
               << std::endl;
 
-    pedidos_en_espera.mostrar();
+    pedidoRepository->printQueueStatus();
 
     std::cout << "----------------------------------------------------- \n"
               << std::endl;
