@@ -4,29 +4,34 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include "ColaThreadSafe.h"
 #include "api/ICoreSistema.h"
 #include "api/IObservadorCore.h"
 #include <atomic>
+#include "repositories/ProductRepository.h"
+#include "repositories/PedidoRepository.h"
 
 class Persona;
 class Pedido;
 class Producto;
 class Observador;
-class MenuCafeteria;
 
 class SistemaPedidos : public ICoreSistema
 {
 public:
-    // Solo para pruebas: acceso read-only a productos
-    const std::vector<std::shared_ptr<Producto>>& getProductos() const { return productos; }
-    void cerrarColaPedidos() { pedidos_en_espera.cerrar(); }
+    // Solo para pruebas: acceso read-only a productos (redirige al repositorio)
+    std::vector<std::shared_ptr<Producto>> getProductos() const;
+    void cerrarColaPedidos();
 
 private:
     /**
-     * @brief Menú de la cafetería, contiene los productos disponibles.
+     * @brief Repositorio de productos.
      */
-    std::unique_ptr<MenuCafeteria> menu;
+    std::shared_ptr<ProductRepository> productRepository;
+
+    /**
+     * @brief Repositorio de pedidos (historial y cola).
+     */
+    std::shared_ptr<PedidoRepository> pedidoRepository;
 
     /**
      * @brief Personas registradas en el sistema (clientes, empleados, etc.).
@@ -34,32 +39,17 @@ private:
     std::vector<std::shared_ptr<Persona>> personas;
 
     /**
-     * @brief Cola de pedidos en espera, gestionada de forma thread-safe.
-     */
-    ColaThreadSafe<std::shared_ptr<Pedido>> pedidos_en_espera;
-
-    /**
      * @brief Observadores registrados para recibir notificaciones de cambios en pedidos.
      */
     std::vector<std::shared_ptr<IObservadorCore>> observadores;
-
-    /**
-     * @brief Productos registrados en el sistema.
-     */
-    std::vector<std::shared_ptr<Producto>> productos;
 
     /**
      * @brief Identificador incremental para registrar nuevas personas.
      */
     std::atomic<int> proximoIdPersona{1};
 
-    /**
-     * @brief Pedidos activos en el sistema.
-     */
-    std::vector<std::shared_ptr<Pedido>> listaMaestraPedidos;
-
 public:
-    SistemaPedidos();
+    SistemaPedidos(std::shared_ptr<ProductRepository> prodRepo, std::shared_ptr<PedidoRepository> orderRepo);
     ~SistemaPedidos();
 
     // Delegación y gestión
@@ -81,11 +71,6 @@ public:
      * @brief Muestra todas las personas registradas en el sistema.
      */
     void mostrarTodasLasPersonas() const;
-
-    /**
-     * @brief Inicializa el menú de la cafetería con productos por defecto.
-     */
-    void inicializarMenu();
 
     /**
      * @brief Agrega un producto a un pedido existente.
