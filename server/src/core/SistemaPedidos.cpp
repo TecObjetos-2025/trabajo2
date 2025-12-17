@@ -197,6 +197,26 @@ void SistemaPedidos::finalizarPedido(std::shared_ptr<Pedido> pedido)
         std::cout << "Pedido #" << pedido->getId()
                   << " finalizado y marcado como PAGADO." << std::endl;
 
+        // Convertir a DTOs
+        InfoPedido dto;
+        dto.id_pedido = pedido->getId();
+        auto cliente = pedido->getCliente();
+        dto.cliente = cliente ? cliente->getNombre() : "Invitado";
+        dto.estado = pedido->getEstadoNombre();
+        dto.total_final = pedido->calcularTotal();
+        for (const auto &item : pedido->getItems())
+        {
+            ItemPedidoInfo itemDto;
+            if (item->getProducto())
+            {
+                itemDto.nombreProducto = item->getProducto()->getNombre();
+                itemDto.precioUnitario = item->getProducto()->getPrecio();
+            }
+            itemDto.cantidad = item->getCantidad();
+            dto.items.push_back(itemDto);
+        }
+        DatabaseManager::instance().savePedido(dto);
+
         // Agregar a la cola de pedidos en espera (NUEVO)
         std::cout << "[SISTEMA] Pedido #" << pedido->getId()
                   << " agregado a la cola de pedidos en espera." << std::endl;

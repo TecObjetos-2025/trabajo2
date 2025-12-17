@@ -8,6 +8,7 @@ public:
     static DatabaseManager &instance();
     bool inicializarTablas();
     bool seedData();
+    bool savePedido(const InfoPedido &pedidoDTO);
     QSqlDatabase &database();
 
     // Devuelve todos los productos activos como DTO

@@ -1,3 +1,4 @@
+#include "api/ApiDTOs.h"
 #include "db/DatabaseManager.h"
 #include <QtSql/QSqlQuery>
 #include <QtSql/QSqlError>
@@ -7,7 +8,7 @@
 DatabaseManager::DatabaseManager()
 {
     m_db = QSqlDatabase::addDatabase("QSQLITE");
-    m_db.setDatabaseName(":memory:"); // Cambiar a archivo si se requiere persistencia real
+    m_db.setDatabaseName("cafeteria.db"); // Persistencia real en disco
     if (!m_db.open())
     {
         qWarning() << "No se pudo abrir la base de datos:" << m_db.lastError().text();
@@ -164,4 +165,63 @@ std::vector<InfoProducto> DatabaseManager::getProductos()
         }
     }
     return productos;
+}
+
+bool DatabaseManager::savePedido(const InfoPedido &pedidoDTO)
+{
+    QSqlDatabase &db = m_db;
+    QSqlQuery query(db);
+    db.transaction();
+    // Insertar en orders
+    query.prepare("INSERT INTO orders (id, customer_id, status, total_final) VALUES (?, ?, ?, ?)");
+    query.addBindValue(pedidoDTO.id_pedido);
+    // Buscar el id del cliente por nombre (simplificado, en real usaría id)
+    int customerId = 0;
+    if (!pedidoDTO.cliente.empty())
+    {
+        QSqlQuery q(db);
+        q.prepare("SELECT id FROM customers WHERE name = ?");
+        q.addBindValue(QString::fromStdString(pedidoDTO.cliente));
+        if (q.exec() && q.next())
+        {
+            customerId = q.value(0).toInt();
+        }
+    }
+    query.addBindValue(customerId);
+    query.addBindValue(QString::fromStdString(pedidoDTO.estado));
+    query.addBindValue(pedidoDTO.total_final);
+    if (!query.exec())
+    {
+        qWarning() << "Error insertando order (DTO):" << query.lastError().text();
+        db.rollback();
+        return false;
+    }
+    int orderId = pedidoDTO.id_pedido;
+    // Insertar items
+    for (const auto &item : pedidoDTO.items)
+    {
+        QSqlQuery itemQuery(db);
+        itemQuery.prepare("INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?)");
+        itemQuery.addBindValue(orderId);
+        // Buscar id del producto por nombre (simplificado)
+        int productId = 0;
+        QSqlQuery pq(db);
+        pq.prepare("SELECT id FROM products WHERE name = ?");
+        pq.addBindValue(QString::fromStdString(item.nombreProducto));
+        if (pq.exec() && pq.next())
+        {
+            productId = pq.value(0).toInt();
+        }
+        itemQuery.addBindValue(productId);
+        itemQuery.addBindValue(item.cantidad);
+        itemQuery.addBindValue(item.precioUnitario);
+        if (!itemQuery.exec())
+        {
+            qWarning() << "Error insertando order_item (DTO):" << itemQuery.lastError().text();
+            db.rollback();
+            return false;
+        }
+    }
+    db.commit();
+    return true;
 }
