@@ -30,6 +30,8 @@ set(SERVER_SOURCES
     ../server/src/patterns/DescuentoFijo.cpp
     ../server/src/patterns/DescuentoNulo.cpp
     ../server/src/patterns/DescuentoPorcentaje.cpp 
+    ../server/src/repositories/ProductRepository.cpp
+    ../server/src/repositories/PedidoRepository.cpp
 )
 
 add_executable(unit_tests

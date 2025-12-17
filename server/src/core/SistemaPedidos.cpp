@@ -15,66 +15,64 @@
 #include "models/Cliente.h"
 #include "models/Producto.h"
 #include "models/ItemPedido.h"
-#include "api/ApiDTOs.h"
 #include "models/Pedido.h"
 #include "api/IObservadorCore.h"
-#include "core/MenuCafeteria.h"
 #include "patterns/DescuentoNulo.h"
 #include "patterns/DescuentoPorcentaje.h"
 #include "patterns/DescuentoFijo.h"
 #include "core/CafeteriaFactory.h"
 #include "core/Configuracion.h"
-#include "db/DatabaseManager.h"
-
-// Función auxiliar para convertir ItemPedido a ItemPedidoInfo
-static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
-{
-    ItemPedidoInfo dto;
-    if (item && item->getProducto())
-    {
-        dto.nombreProducto = item->getProducto()->getNombre();
-        dto.cantidad = item->getCantidad();
-        dto.precioUnitario = item->getProducto()->getPrecio();
-    }
-    return dto;
-}
 
 /**
- * @brief Clase principal para la gestión de pedidos, clientes y notificaciones en la cafetería.
+ * @brief Clase principal del sistema de gestión de pedidos.
  * @author Fabricio Alonso Balarezo Delgado, Juan Manuel Cari Quispe, Anthony Ronaldo Cahui Benegas
  * @details Permite registrar personas, clientes, crear pedidos y notificar observadores (patrón Observer).
  */
 // Constructor
-SistemaPedidos::SistemaPedidos()
+SistemaPedidos::SistemaPedidos(std::shared_ptr<ProductRepository> prodRepo, std::shared_ptr<PedidoRepository> orderRepo)
+    : productRepository(prodRepo), pedidoRepository(orderRepo)
 {
-    menu = std::make_unique<MenuCafeteria>();
 }
 
 // Destructor para liberar memoria
 SistemaPedidos::~SistemaPedidos()
 {
     std::cout << "Liberar memoria del sistema..." << std::endl;
-    // No es necesario liberar manualmente, los punteros inteligentes lo hacen automáticamente
 }
 
 // Mejora de delegacion al mostrar el menu
 void SistemaPedidos::mostrarMenu() const
 {
-    this->menu->mostrarMenu();
+    std::vector<std::shared_ptr<Producto>> allProducts = productRepository->getAll();
+
+    std::cout << "----------- MENU DE LA CAFETERIA -----------" << std::endl;
+    std::cout << std::left << std::setw(5) << "ID"
+              << std::setw(25) << "Nombre"
+              << std::setw(15) << "Categoria"
+              << std::right << std::setw(10) << "Precio" << std::endl;
+    std::cout << "---------------------------------------------------" << std::endl;
+
+    std::cout << std::fixed << std::setprecision(2);
+
+    for (const auto &producto : allProducts)
+    {
+        std::cout << std::left << std::setw(5) << producto->getId()
+                  << std::setw(25) << producto->getNombre()
+                  << std::setw(15) << producto->getCategoria()
+                  << std::right << std::setw(10) << producto->getPrecio() << std::endl;
+    }
+    std::cout << "---------------------------------------------------" << std::endl;
 }
 
-void SistemaPedidos::inicializarMenu()
+// Helper method for tests
+std::vector<std::shared_ptr<Producto>> SistemaPedidos::getProductos() const
 {
-    // Cargar productos desde la base de datos usando DatabaseManager
-    productos.clear();
-    menu = std::make_unique<MenuCafeteria>();
-    auto productosDTO = DatabaseManager::instance().getProductos();
-    for (const auto &dto : productosDTO)
-    {
-        Producto prod(dto.id, dto.nombre, dto.precio, ""); // La categoría puede omitirse o mapearse si se agrega al DTO
-        menu->agregarProducto(prod);
-        productos.push_back(std::make_shared<Producto>(prod));
-    }
+    return productRepository->getAll();
+}
+
+void SistemaPedidos::cerrarColaPedidos()
+{
+    pedidoRepository->closeKitchenQueue();
 }
 
 // Nueva gestion
@@ -114,65 +112,17 @@ void SistemaPedidos::mostrarTodasLasPersonas() const
     }
 }
 
-// ----
-
-/*
-* Vieja gestion
-
-void SistemaPedidos::registrarCliente(const std::string &nombre, const std::string &telefono)
-{
-    clientes.emplace_back(proximoIdCliente++, nombre, telefono);
-    std::cout << "Cliente '" << nombre << "' registrado con exito con el ID: " << (proximoIdCliente - 1) << std::endl;
-}
-
-Cliente *SistemaPedidos::buscarClientePorId(int id)
-{
-    for (auto &cliente : clientes)
-    {
-        if (cliente.getId() == id)
-        {
-            return &cliente;
-        }
-    }
-    return nullptr;
-}
-
-// Crear un nuevo pedido
-Pedido &SistemaPedidos::crearPedido(Cliente &cliente)
-{
-    pedidos.emplace_back(proximoIdPedido++, cliente);
-    return pedidos.back();
-}
-*/
-
 // Agregar un producto a un pedido existente.
 void SistemaPedidos::agregarProductoAPedido(Pedido &pedido, int idProducto, int cantidad)
 {
-    const Producto *productoRaw = menu->getProductoPorId(idProducto);
-    if (productoRaw != nullptr)
+    std::shared_ptr<Producto> productoPtr = productRepository->findById(idProducto);
+
+    if (productoPtr)
     {
-        // Buscar el shared_ptr correspondiente en productos
-        std::shared_ptr<Producto> productoPtr;
-        for (const auto &prod : productos)
-        {
-            if (prod && prod->getId() == idProducto)
-            {
-                productoPtr = std::shared_ptr<Producto>(prod.get(), [](Producto *) {}); // aliasing, no ownership
-                break;
-            }
-        }
-        if (productoPtr)
-        {
-            pedido.agregarItem(productoPtr, cantidad);
-            std::cout << "Se agregaron " << cantidad << "x "
-                      << productoRaw->getNombre()
-                      << " al pedido." << std::endl;
-        }
-        else
-        {
-            std::cout << "Error: Producto con ID " << idProducto
-                      << " no gestionado por el sistema." << std::endl;
-        }
+        pedido.agregarItem(productoPtr, cantidad);
+        std::cout << "Se agregaron " << cantidad << "x "
+                  << productoPtr->getNombre()
+                  << " al pedido." << std::endl;
     }
     else
     {
@@ -185,7 +135,7 @@ void SistemaPedidos::agregarProducto(std::shared_ptr<Producto> producto)
 {
     if (producto)
     {
-        productos.push_back(producto);
+        productRepository->add(producto);
     }
 }
 
@@ -197,32 +147,13 @@ void SistemaPedidos::finalizarPedido(std::shared_ptr<Pedido> pedido)
         std::cout << "Pedido #" << pedido->getId()
                   << " finalizado y marcado como PAGADO." << std::endl;
 
-        // Convertir a DTOs
-        InfoPedido dto;
-        dto.id_pedido = pedido->getId();
-        auto cliente = pedido->getCliente();
-        dto.cliente = cliente ? cliente->getNombre() : "Invitado";
-        dto.estado = pedido->getEstadoNombre();
-        dto.total_final = pedido->calcularTotal();
-        for (const auto &item : pedido->getItems())
-        {
-            ItemPedidoInfo itemDto;
-            if (item->getProducto())
-            {
-                itemDto.nombreProducto = item->getProducto()->getNombre();
-                itemDto.precioUnitario = item->getProducto()->getPrecio();
-            }
-            itemDto.cantidad = item->getCantidad();
-            dto.items.push_back(itemDto);
-        }
-        DatabaseManager::instance().savePedido(dto);
+        // Persist to DB and add to History via Repository
+        pedidoRepository->save(pedido);
 
-        // Agregar a la cola de pedidos en espera (NUEVO)
+        // Add to Kitchen Queue via Repository
         std::cout << "[SISTEMA] Pedido #" << pedido->getId()
                   << " agregado a la cola de pedidos en espera." << std::endl;
-        pedidos_en_espera.push(pedido);
-
-        listaMaestraPedidos.push_back(pedido);
+        pedidoRepository->queueForKitchen(pedido);
 
         std::cout << "Notificando..." << std::endl;
         notificarObservadores(pedido.get());
@@ -289,6 +220,7 @@ void SistemaPedidos::notificarObservadores(const Pedido *pedido)
 std::vector<InfoProducto> SistemaPedidos::getMenu()
 {
     std::vector<InfoProducto> menuDTO;
+    auto productos = productRepository->getAll();
     for (const auto &producto : productos)
     {
         InfoProducto dto;
@@ -328,7 +260,7 @@ void SistemaPedidos::finalizarPedido(
         items,
         id_descuentos,
         personas,
-        productos);
+        productRepository->getAll());
     if (!pedido)
     {
         std::cout << "[API] Cliente no encontrado: " << cliente << std::endl;
@@ -341,37 +273,18 @@ void SistemaPedidos::finalizarPedido(
               << pedido->calcularTotal()
               << std::endl;
 
-    listaMaestraPedidos.push_back(pedido);
-    pedidos_en_espera.push(pedido);
+    // Persist to DB and add to History via Repository
+    pedidoRepository->save(pedido);
+
+    // Add to Kitchen Queue via Repository
+    pedidoRepository->queueForKitchen(pedido);
 
     notificarObservadores(pedido.get());
 }
 
 std::vector<InfoPedido> SistemaPedidos::getPedidosActivos()
 {
-    std::vector<InfoPedido> pedidosDTO;
-
-    for (const auto &pedido : this->listaMaestraPedidos)
-    {
-        InfoPedido dto;
-        dto.id_pedido = pedido->getId();
-        dto.cliente = pedido->getCliente()
-                          ? pedido->getCliente()->getNombre()
-                          : "Cliente Anonimo";
-
-        dto.estado = pedido->getEstadoNombre();
-
-        dto.total_final = pedido->calcularTotal();
-
-        for (const auto &itemPtr : pedido->getItems())
-        {
-            const ItemPedido *item = itemPtr.get();
-            dto.items.push_back(convertirItemPedido(item));
-        }
-        pedidosDTO.push_back(dto);
-    }
-
-    return pedidosDTO;
+    return pedidoRepository->getHistoryDTOs();
 }
 
 void SistemaPedidos::procesarSiguientePedido()
@@ -413,8 +326,8 @@ std::shared_ptr<Pedido> SistemaPedidos::procesarSiguientePedidoInterno()
 {
     std::cout << "\n[COCINERO] Buscando nuevo pedido en la cola..." << std::endl;
 
-    std::shared_ptr<Pedido> pedido;
-    if (pedidos_en_espera.tryPop(pedido))
+    std::shared_ptr<Pedido> pedido = pedidoRepository->nextForKitchen();
+    if (pedido)
     {
         std::cout << "[COCINERO] Pedido #"
                   << pedido->getId()
@@ -450,7 +363,7 @@ void SistemaPedidos::mostrarPedidosEnEspera() const
     std::cout << "\n --- ESTADO ACTUAL DE LA COLA DE PEDIDOS EN ESPERA --- "
               << std::endl;
 
-    pedidos_en_espera.mostrar();
+    pedidoRepository->printQueueStatus();
 
     std::cout << "----------------------------------------------------- \n"
               << std::endl;
