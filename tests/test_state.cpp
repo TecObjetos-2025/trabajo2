@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include "models/Pedido.h"
 #include "models/Cliente.h"
-#include "models/EstadoEnCola.h"
-#include "models/EstadoEnPreparacion.h"
-#include "models/EstadoListo.h"
+#include "patterns/EstadoEnCola.h"
+#include "patterns/EstadoEnPreparacion.h"
+#include "patterns/EstadoListo.h"
 
 /**
  * @file test_state.cpp
