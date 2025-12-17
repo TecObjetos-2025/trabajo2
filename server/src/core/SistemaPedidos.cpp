@@ -25,7 +25,8 @@
 #include "core/Configuracion.h"
 #include "db/DatabaseManager.h"
 
-// Función auxiliar para convertir ItemPedido a ItemPedidoInfo
+// Funciones auxiliares
+// Convertir ItemPedido a ItemPedidoInfo
 static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
 {
     ItemPedidoInfo dto;
@@ -34,6 +35,30 @@ static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
         dto.nombreProducto = item->getProducto()->getNombre();
         dto.cantidad = item->getCantidad();
         dto.precioUnitario = item->getProducto()->getPrecio();
+    }
+    return dto;
+}
+
+// Convertir Pedido a InfoPedido
+static InfoPedido convertirPedido(const Pedido *pedido)
+{
+    InfoPedido dto;
+    if (pedido)
+    {
+        dto.id_pedido = pedido->getId();
+        dto.cliente = pedido->getCliente()
+                          ? pedido->getCliente()->getNombre()
+                          : "Invitado";
+
+        dto.estado = pedido->getEstadoNombre();
+
+        dto.total_final = pedido->calcularTotal();
+
+        for (const auto &itemPtr : pedido->getItems())
+        {
+            const ItemPedido *item = itemPtr.get();
+            dto.items.push_back(convertirItemPedido(item));
+        }
     }
     return dto;
 }
@@ -80,7 +105,8 @@ void SistemaPedidos::mostrarMenu() const
 }
 
 // Helper method for tests
-std::vector<std::shared_ptr<Producto>> SistemaPedidos::getProductos() const {
+std::vector<std::shared_ptr<Producto>> SistemaPedidos::getProductos() const
+{
     return productRepository->getAll();
 }
 
@@ -156,24 +182,8 @@ void SistemaPedidos::finalizarPedido(std::shared_ptr<Pedido> pedido)
         std::cout << "Pedido #" << pedido->getId()
                   << " finalizado y marcado como PAGADO." << std::endl;
 
-        // Convertir a DTOs
-        InfoPedido dto;
-        dto.id_pedido = pedido->getId();
-        auto cliente = pedido->getCliente();
-        dto.cliente = cliente ? cliente->getNombre() : "Invitado";
-        dto.estado = pedido->getEstadoNombre();
-        dto.total_final = pedido->calcularTotal();
-        for (const auto &item : pedido->getItems())
-        {
-            ItemPedidoInfo itemDto;
-            if (item->getProducto())
-            {
-                itemDto.nombreProducto = item->getProducto()->getNombre();
-                itemDto.precioUnitario = item->getProducto()->getPrecio();
-            }
-            itemDto.cantidad = item->getCantidad();
-            dto.items.push_back(itemDto);
-        }
+        InfoPedido dto = convertirPedido(pedido.get());
+
         DatabaseManager::instance().savePedido(dto);
 
         // Agregar a la cola de pedidos en espera (NUEVO)

@@ -8,7 +8,9 @@
 DatabaseManager::DatabaseManager()
 {
     m_db = QSqlDatabase::addDatabase("QSQLITE");
-    m_db.setDatabaseName("cafeteria.db"); // Persistencia real en disco
+    // DEBUG SOLO EN MEMORIA
+    m_db.setDatabaseName(":memory:");
+    // m_db.setDatabaseName("cafeteria.db"); // Persistencia real en disco
     if (!m_db.open())
     {
         qWarning() << "No se pudo abrir la base de datos:" << m_db.lastError().text();
