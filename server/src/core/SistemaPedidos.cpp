@@ -15,7 +15,6 @@
 #include "models/Cliente.h"
 #include "models/Producto.h"
 #include "models/ItemPedido.h"
-#include "api/ApiDTOs.h"
 #include "models/Pedido.h"
 #include "api/IObservadorCore.h"
 #include "patterns/DescuentoNulo.h"
@@ -23,46 +22,6 @@
 #include "patterns/DescuentoFijo.h"
 #include "core/CafeteriaFactory.h"
 #include "core/Configuracion.h"
-// DatabaseManager is no longer needed here thanks to Repositories
-// #include "db/DatabaseManager.h"
-
-// Funciones auxiliares
-// Convertir ItemPedido a ItemPedidoInfo
-static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
-{
-    ItemPedidoInfo dto;
-    if (item && item->getProducto())
-    {
-        dto.nombreProducto = item->getProducto()->getNombre();
-        dto.cantidad = item->getCantidad();
-        dto.precioUnitario = item->getProducto()->getPrecio();
-    }
-    return dto;
-}
-
-// Convertir Pedido a InfoPedido
-static InfoPedido convertirPedido(const Pedido *pedido)
-{
-    InfoPedido dto;
-    if (pedido)
-    {
-        dto.id_pedido = pedido->getId();
-        dto.cliente = pedido->getCliente()
-                          ? pedido->getCliente()->getNombre()
-                          : "Invitado";
-
-        dto.estado = pedido->getEstadoNombre();
-
-        dto.total_final = pedido->calcularTotal();
-
-        for (const auto &itemPtr : pedido->getItems())
-        {
-            const ItemPedido *item = itemPtr.get();
-            dto.items.push_back(convertirItemPedido(item));
-        }
-    }
-    return dto;
-}
 
 /**
  * @brief Clase principal para la gestión de pedidos, clientes y notificaciones en la cafetería.
@@ -325,30 +284,7 @@ void SistemaPedidos::finalizarPedido(
 
 std::vector<InfoPedido> SistemaPedidos::getPedidosActivos()
 {
-    std::vector<InfoPedido> pedidosDTO;
-
-    auto listaMaestraPedidos = pedidoRepository->getHistory();
-    for (const auto &pedido : listaMaestraPedidos)
-    {
-        InfoPedido dto;
-        dto.id_pedido = pedido->getId();
-        dto.cliente = pedido->getCliente()
-                          ? pedido->getCliente()->getNombre()
-                          : "Cliente Anonimo";
-
-        dto.estado = pedido->getEstadoNombre();
-
-        dto.total_final = pedido->calcularTotal();
-
-        for (const auto &itemPtr : pedido->getItems())
-        {
-            const ItemPedido *item = itemPtr.get();
-            dto.items.push_back(convertirItemPedido(item));
-        }
-        pedidosDTO.push_back(dto);
-    }
-
-    return pedidosDTO;
+    return pedidoRepository->getHistoryDTOs();
 }
 
 void SistemaPedidos::procesarSiguientePedido()

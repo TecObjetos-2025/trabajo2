@@ -4,6 +4,7 @@
 #include <memory>
 #include "models/Pedido.h"
 #include "ColaThreadSafe.h"
+#include "api/ApiDTOs.h"
 
 class PedidoRepository
 {
@@ -33,6 +34,11 @@ public:
      * @brief Returns the full history of orders managed by this repository.
      */
     std::vector<std::shared_ptr<Pedido>> getHistory() const;
+
+    /**
+     * @brief Returns the full history of orders as InfoPedido DTOs.
+     */
+    std::vector<InfoPedido> getHistoryDTOs() const;
 
     /**
      * @brief Closes the kitchen queue, preventing new items from being pushed.
