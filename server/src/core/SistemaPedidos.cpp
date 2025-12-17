@@ -18,7 +18,6 @@
 #include "api/ApiDTOs.h"
 #include "models/Pedido.h"
 #include "api/IObservadorCore.h"
-#include "core/MenuCafeteria.h"
 #include "patterns/DescuentoNulo.h"
 #include "patterns/DescuentoPorcentaje.h"
 #include "patterns/DescuentoFijo.h"
@@ -45,36 +44,44 @@ static ItemPedidoInfo convertirItemPedido(const ItemPedido *item)
  * @details Permite registrar personas, clientes, crear pedidos y notificar observadores (patrón Observer).
  */
 // Constructor
-SistemaPedidos::SistemaPedidos()
+SistemaPedidos::SistemaPedidos(std::shared_ptr<ProductRepository> repo)
+    : productRepository(repo)
 {
-    menu = std::make_unique<MenuCafeteria>();
 }
 
 // Destructor para liberar memoria
 SistemaPedidos::~SistemaPedidos()
 {
     std::cout << "Liberar memoria del sistema..." << std::endl;
-    // No es necesario liberar manualmente, los punteros inteligentes lo hacen automáticamente
 }
 
 // Mejora de delegacion al mostrar el menu
 void SistemaPedidos::mostrarMenu() const
 {
-    this->menu->mostrarMenu();
+    std::vector<std::shared_ptr<Producto>> allProducts = productRepository->getAll();
+
+    std::cout << "----------- MENU DE LA CAFETERIA -----------" << std::endl;
+    std::cout << std::left << std::setw(5) << "ID"
+              << std::setw(25) << "Nombre"
+              << std::setw(15) << "Categoria"
+              << std::right << std::setw(10) << "Precio" << std::endl;
+    std::cout << "---------------------------------------------------" << std::endl;
+
+    std::cout << std::fixed << std::setprecision(2);
+
+    for (const auto &producto : allProducts)
+    {
+        std::cout << std::left << std::setw(5) << producto->getId()
+                  << std::setw(25) << producto->getNombre()
+                  << std::setw(15) << producto->getCategoria()
+                  << std::right << std::setw(10) << producto->getPrecio() << std::endl;
+    }
+    std::cout << "---------------------------------------------------" << std::endl;
 }
 
-void SistemaPedidos::inicializarMenu()
-{
-    // Cargar productos desde la base de datos usando DatabaseManager
-    productos.clear();
-    menu = std::make_unique<MenuCafeteria>();
-    auto productosDTO = DatabaseManager::instance().getProductos();
-    for (const auto &dto : productosDTO)
-    {
-        Producto prod(dto.id, dto.nombre, dto.precio, ""); // La categoría puede omitirse o mapearse si se agrega al DTO
-        menu->agregarProducto(prod);
-        productos.push_back(std::make_shared<Producto>(prod));
-    }
+// Helper method for tests
+std::vector<std::shared_ptr<Producto>> SistemaPedidos::getProductos() const {
+    return productRepository->getAll();
 }
 
 // Nueva gestion
@@ -114,65 +121,17 @@ void SistemaPedidos::mostrarTodasLasPersonas() const
     }
 }
 
-// ----
-
-/*
-* Vieja gestion
-
-void SistemaPedidos::registrarCliente(const std::string &nombre, const std::string &telefono)
-{
-    clientes.emplace_back(proximoIdCliente++, nombre, telefono);
-    std::cout << "Cliente '" << nombre << "' registrado con exito con el ID: " << (proximoIdCliente - 1) << std::endl;
-}
-
-Cliente *SistemaPedidos::buscarClientePorId(int id)
-{
-    for (auto &cliente : clientes)
-    {
-        if (cliente.getId() == id)
-        {
-            return &cliente;
-        }
-    }
-    return nullptr;
-}
-
-// Crear un nuevo pedido
-Pedido &SistemaPedidos::crearPedido(Cliente &cliente)
-{
-    pedidos.emplace_back(proximoIdPedido++, cliente);
-    return pedidos.back();
-}
-*/
-
 // Agregar un producto a un pedido existente.
 void SistemaPedidos::agregarProductoAPedido(Pedido &pedido, int idProducto, int cantidad)
 {
-    const Producto *productoRaw = menu->getProductoPorId(idProducto);
-    if (productoRaw != nullptr)
+    std::shared_ptr<Producto> productoPtr = productRepository->findById(idProducto);
+
+    if (productoPtr)
     {
-        // Buscar el shared_ptr correspondiente en productos
-        std::shared_ptr<Producto> productoPtr;
-        for (const auto &prod : productos)
-        {
-            if (prod && prod->getId() == idProducto)
-            {
-                productoPtr = std::shared_ptr<Producto>(prod.get(), [](Producto *) {}); // aliasing, no ownership
-                break;
-            }
-        }
-        if (productoPtr)
-        {
-            pedido.agregarItem(productoPtr, cantidad);
-            std::cout << "Se agregaron " << cantidad << "x "
-                      << productoRaw->getNombre()
-                      << " al pedido." << std::endl;
-        }
-        else
-        {
-            std::cout << "Error: Producto con ID " << idProducto
-                      << " no gestionado por el sistema." << std::endl;
-        }
+        pedido.agregarItem(productoPtr, cantidad);
+        std::cout << "Se agregaron " << cantidad << "x "
+                  << productoPtr->getNombre()
+                  << " al pedido." << std::endl;
     }
     else
     {
@@ -185,7 +144,7 @@ void SistemaPedidos::agregarProducto(std::shared_ptr<Producto> producto)
 {
     if (producto)
     {
-        productos.push_back(producto);
+        productRepository->add(producto);
     }
 }
 
@@ -289,6 +248,7 @@ void SistemaPedidos::notificarObservadores(const Pedido *pedido)
 std::vector<InfoProducto> SistemaPedidos::getMenu()
 {
     std::vector<InfoProducto> menuDTO;
+    auto productos = productRepository->getAll();
     for (const auto &producto : productos)
     {
         InfoProducto dto;
@@ -328,7 +288,7 @@ void SistemaPedidos::finalizarPedido(
         items,
         id_descuentos,
         personas,
-        productos);
+        productRepository->getAll());
     if (!pedido)
     {
         std::cout << "[API] Cliente no encontrado: " << cliente << std::endl;
