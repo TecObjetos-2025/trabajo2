@@ -16,14 +16,16 @@ NetworkClientProxy::NetworkClientProxy(const QString &host_, quint16 port_)
 {
     socket = new QTcpSocket();
     socket->connectToHost(host, port);
-    if (!socket->waitForConnected(2000)) {
+    if (!socket->waitForConnected(2000))
+    {
         qWarning() << "NetworkClientProxy: no se pudo conectar a" << host << port;
     }
 }
 
 NetworkClientProxy::~NetworkClientProxy()
 {
-    if (socket) {
+    if (socket)
+    {
         socket->disconnectFromHost();
         socket->deleteLater();
     }
@@ -41,7 +43,8 @@ void NetworkClientProxy::removerObservador(IObservadorCore * /*observador*/)
 
 QJsonObject NetworkClientProxy::enviarRequestYEsperarRespuesta(const QString &cmd, const QJsonObject &payload, int timeoutMs)
 {
-    if (!socket || socket->state() != QAbstractSocket::ConnectedState) {
+    if (!socket || socket->state() != QAbstractSocket::ConnectedState)
+    {
         throw std::runtime_error("No conectado al servidor");
     }
 
@@ -56,11 +59,17 @@ QJsonObject NetworkClientProxy::enviarRequestYEsperarRespuesta(const QString &cm
     // Leer cabecera (4 bytes big-endian)
     QByteArray hdr;
     int waited = 0;
-    while (hdr.size() < static_cast<int>(sizeof(quint32)) && waited < timeoutMs) {
-        if (!socket->waitForReadyRead(100)) { waited += 100; continue; }
+    while (hdr.size() < static_cast<int>(sizeof(quint32)) && waited < timeoutMs)
+    {
+        if (!socket->waitForReadyRead(100))
+        {
+            waited += 100;
+            continue;
+        }
         hdr.append(socket->read(static_cast<int>(sizeof(quint32)) - hdr.size()));
     }
-    if (hdr.size() < static_cast<int>(sizeof(quint32))) {
+    if (hdr.size() < static_cast<int>(sizeof(quint32)))
+    {
         throw std::runtime_error("Timeout esperando cabecera de respuesta");
     }
 
@@ -73,25 +82,35 @@ QJsonObject NetworkClientProxy::enviarRequestYEsperarRespuesta(const QString &cm
     qDebug() << "NetworkClientProxy: bytesAvailable after header:" << availableNow;
 
     QByteArray body;
-        if (availableNow >= static_cast<int>(len)) {
-            body = socket->read(static_cast<int>(len));
-            qDebug() << "NetworkClientProxy: read full body immediately, size" << body.size();
-        } else {
-            waited = 0;
-            while (body.size() < static_cast<int>(len) && waited < timeoutMs) {
-                if (!socket->waitForReadyRead(100)) { waited += 100; continue; }
-                QByteArray chunk = socket->read(static_cast<int>(len) - body.size());
-                qDebug() << "NetworkClientProxy: read chunk size" << chunk.size();
-                body.append(chunk);
+    if (availableNow >= static_cast<int>(len))
+    {
+        body = socket->read(static_cast<int>(len));
+        qDebug() << "NetworkClientProxy: read full body immediately, size" << body.size();
+    }
+    else
+    {
+        waited = 0;
+        while (body.size() < static_cast<int>(len) && waited < timeoutMs)
+        {
+            if (!socket->waitForReadyRead(100))
+            {
+                waited += 100;
+                continue;
             }
+            QByteArray chunk = socket->read(static_cast<int>(len) - body.size());
+            qDebug() << "NetworkClientProxy: read chunk size" << chunk.size();
+            body.append(chunk);
         }
-    if (body.size() < static_cast<int>(len)) {
+    }
+    if (body.size() < static_cast<int>(len))
+    {
         throw std::runtime_error("Timeout esperando cuerpo de respuesta");
     }
 
     QJsonParseError err;
     QJsonDocument doc = QJsonDocument::fromJson(body, &err);
-    if (err.error != QJsonParseError::NoError || !doc.isObject()) {
+    if (err.error != QJsonParseError::NoError || !doc.isObject())
+    {
         throw std::runtime_error(std::string("Respuesta JSON malformada: ") + err.errorString().toStdString());
     }
 
@@ -102,20 +121,25 @@ std::vector<InfoProducto> NetworkClientProxy::getMenu()
 {
     QJsonObject payload; // vacío
     QJsonObject resp = enviarRequestYEsperarRespuesta(Protocolo::CMD_GET_MENU, payload);
-    if (!resp.contains(Protocolo::KEY_STATUS) || !resp.value(Protocolo::KEY_STATUS).isString()) {
+    if (!resp.contains(Protocolo::KEY_STATUS) || !resp.value(Protocolo::KEY_STATUS).isString())
+    {
         throw std::runtime_error("Respuesta sin status");
     }
     QString status = resp.value(Protocolo::KEY_STATUS).toString();
-    if (status != "OK") {
+    if (status != "OK")
+    {
         QString msg = resp.contains(Protocolo::KEY_MSG) ? resp.value(Protocolo::KEY_MSG).toString() : QString("Error desconocido");
         throw std::runtime_error(msg.toStdString());
     }
 
     std::vector<InfoProducto> menu;
-    if (resp.contains(Protocolo::KEY_DATA) && resp.value(Protocolo::KEY_DATA).isArray()) {
+    if (resp.contains(Protocolo::KEY_DATA) && resp.value(Protocolo::KEY_DATA).isArray())
+    {
         QJsonArray arr = resp.value(Protocolo::KEY_DATA).toArray();
-        for (const QJsonValue &v : arr) {
-            if (!v.isObject()) continue;
+        for (const QJsonValue &v : arr)
+        {
+            if (!v.isObject())
+                continue;
             QJsonObject o = v.toObject();
             InfoProducto p;
             p.id = o.value("id").toInt();
@@ -134,7 +158,8 @@ void NetworkClientProxy::finalizarPedido(const std::string &cliente, const std::
     payload.insert("id_descuento", QString::fromStdString(id_descuentos));
 
     QJsonArray arr;
-    for (const auto &it : items) {
+    for (const auto &it : items)
+    {
         QJsonObject o;
         o.insert("productoId", it.productoId);
         o.insert("cantidad", it.cantidad);
@@ -143,11 +168,13 @@ void NetworkClientProxy::finalizarPedido(const std::string &cliente, const std::
     payload.insert("items", arr);
 
     QJsonObject resp = enviarRequestYEsperarRespuesta(Protocolo::CMD_ADD_ORDER, payload);
-    if (!resp.contains(Protocolo::KEY_STATUS) || !resp.value(Protocolo::KEY_STATUS).isString()) {
+    if (!resp.contains(Protocolo::KEY_STATUS) || !resp.value(Protocolo::KEY_STATUS).isString())
+    {
         throw std::runtime_error("Respuesta sin status");
     }
     QString status = resp.value(Protocolo::KEY_STATUS).toString();
-    if (status != "OK") {
+    if (status != "OK")
+    {
         QString msg = resp.contains(Protocolo::KEY_MSG) ? resp.value(Protocolo::KEY_MSG).toString() : QString("Error desconocido");
         throw std::runtime_error(msg.toStdString());
     }
