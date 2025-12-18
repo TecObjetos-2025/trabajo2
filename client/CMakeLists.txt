@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Network)
 
 set(PROJECT_SOURCES
     src/main.cpp
@@ -19,11 +19,16 @@ set(PROJECT_SOURCES
     src/mainwindow.ui
     src/CoreQtAdapter.h
     src/CoreQtAdapter.cpp
+    src/NetworkClientProxy.cpp
+    src/NetworkProtocol.h
 )
 
 add_executable(CafeteriaClient
     ${PROJECT_SOURCES}
 )
+
+add_executable(TestNetworkProxy src/test_network_proxy.cpp src/NetworkClientProxy.cpp src/NetworkProtocol.h)
+target_link_libraries(TestNetworkProxy PRIVATE Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Core CafeteriaCommon)
 
 target_link_libraries(CafeteriaClient PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 

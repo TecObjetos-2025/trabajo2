@@ -22,7 +22,7 @@ enable_testing()
 
 add_subdirectory(common)
 add_subdirectory(server)
-#add_subdirectory(client)
+add_subdirectory(client)
 
 #Tests
 add_subdirectory(tests)

@@ -4,6 +4,7 @@
 #include <QtSql/QSqlError>
 #include <QDebug>
 #include <QFile>
+#include <QCoreApplication>
 
 DatabaseManager::DatabaseManager()
 {
@@ -125,11 +126,23 @@ bool DatabaseManager::seedData()
     QFile file(":/server/db/seed.sql");
     if (!file.exists())
     {
-        file.setFileName("../server/db/seed.sql"); // fallback para ejecución desde build
+        // Intentar varios paths relativos según desde dónde se ejecute la aplicación
+        file.setFileName("../server/db/seed.sql"); // fallback histórico
+        if (!file.exists())
+            file.setFileName("server/db/seed.sql");
+        if (!file.exists())
+            file.setFileName("./server/db/seed.sql");
+        if (!file.exists())
+        {
+            // Intentar ruta relativa al binario (build/server/../../server/db/seed.sql)
+            QString alt = QCoreApplication::applicationDirPath() + "/../../server/db/seed.sql";
+            file.setFileName(alt);
+        }
     }
+    qDebug() << "DatabaseManager::seedData - intentando abrir:" << file.fileName() << "exists?" << file.exists();
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        qWarning() << "No se pudo abrir seed.sql:" << file.errorString();
+        qWarning() << "No se pudo abrir seed.sql:" << file.fileName() << file.errorString();
         return false;
     }
     QString sql = file.readAll();
