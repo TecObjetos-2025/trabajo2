@@ -7,8 +7,10 @@
 #include <QHostAddress>
 #include <iostream>
 #include <QTcpSocket>
+#include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include "NetworkProtocol.h"
 
 #include "core/SistemaPedidos.h"
 
@@ -62,6 +64,7 @@ void NetworkServer::onClienteDesconectado()
     if (!socket)
         return;
     clientes.remove(socket);
+    recvBuffers.remove(socket);
     socket->deleteLater();
     std::cout << "NetworkServer: cliente desconectado" << std::endl;
 }
@@ -71,9 +74,7 @@ void NetworkServer::enviarError(QTcpSocket *socket, const QString &mensaje)
     QJsonObject resp;
     resp.insert(Protocolo::KEY_STATUS, QString("ERROR"));
     resp.insert(Protocolo::KEY_MSG, mensaje);
-    QJsonDocument d(resp);
-    if (socket && socket->isOpen())
-        socket->write(d.toJson(QJsonDocument::Compact));
+    NetworkProtocol::sendJson(socket, resp);
 }
 
 void NetworkServer::onMensajeRecibido()
@@ -82,40 +83,67 @@ void NetworkServer::onMensajeRecibido()
     if (!socket)
         return;
 
-    QByteArray raw = socket->readAll();
-    QJsonParseError err;
-    QJsonDocument doc = QJsonDocument::fromJson(raw, &err);
-    if (err.error != QJsonParseError::NoError || !doc.isObject())
+    // Append received bytes to per-socket buffer
+    QByteArray &buf = recvBuffers[socket];
+    buf.append(socket->readAll());
+
+    // Process all complete messages (length-prefixed with 4 bytes Big Endian)
+    while (true)
     {
-        enviarError(socket, QString("JSON malformado: %1").arg(err.errorString()));
-        return;
+        if (buf.size() < static_cast<int>(sizeof(quint32)))
+            break;
+
+        QDataStream ds(buf);
+        ds.setByteOrder(QDataStream::BigEndian);
+        quint32 msgLen = 0;
+        ds >> msgLen; // reads first 4 bytes
+
+        if (buf.size() < static_cast<int>(sizeof(quint32) + msgLen))
+            break; // wait for full message
+
+        // Extract message bytes
+        QByteArray msgBytes = buf.mid(sizeof(quint32), msgLen);
+
+        // Remove processed bytes from buffer
+        buf.remove(0, sizeof(quint32) + msgLen);
+
+        // Parse JSON message
+        QJsonParseError err;
+        QJsonDocument doc = QJsonDocument::fromJson(msgBytes, &err);
+        if (err.error != QJsonParseError::NoError || !doc.isObject())
+        {
+            qDebug() << "NetworkServer: JSON parse error:" << err.errorString();
+            enviarError(socket, QString("JSON malformado: %1").arg(err.errorString()));
+            continue; // try next message
+        }
+
+        QJsonObject obj = doc.object();
+        if (!obj.contains(Protocolo::KEY_CMD) || !obj.value(Protocolo::KEY_CMD).isString())
+        {
+            enviarError(socket, QString("Falta campo 'cmd' o es inválido"));
+            continue;
+        }
+
+        QString cmd = obj.value(Protocolo::KEY_CMD).toString();
+        qDebug() << "NetworkServer: procesando comando" << cmd;
+        QJsonObject payload = obj.contains(Protocolo::KEY_PAYLOAD) && obj.value(Protocolo::KEY_PAYLOAD).isObject()
+                                  ? obj.value(Protocolo::KEY_PAYLOAD).toObject()
+                                  : QJsonObject();
+
+        auto comando = getComando(cmd);
+        if (!comando)
+        {
+            enviarError(socket, QString("Comando desconocido: %1").arg(cmd));
+            continue;
+        }
+
+        if (!sistema)
+        {
+            enviarError(socket, QString("Servidor no tiene acceso al subsistema de negocio"));
+            continue;
+        }
+
+        // Despachar al comando
+        comando->ejecutar(socket, payload, *sistema);
     }
-
-    QJsonObject obj = doc.object();
-    if (!obj.contains(Protocolo::KEY_CMD) || !obj.value(Protocolo::KEY_CMD).isString())
-    {
-        enviarError(socket, QString("Falta campo 'cmd' o es inválido"));
-        return;
-    }
-
-    QString cmd = obj.value(Protocolo::KEY_CMD).toString();
-    QJsonObject payload = obj.contains(Protocolo::KEY_PAYLOAD) && obj.value(Protocolo::KEY_PAYLOAD).isObject()
-                              ? obj.value(Protocolo::KEY_PAYLOAD).toObject()
-                              : QJsonObject();
-
-    auto comando = getComando(cmd);
-    if (!comando)
-    {
-        enviarError(socket, QString("Comando desconocido: %1").arg(cmd));
-        return;
-    }
-
-    if (!sistema)
-    {
-        enviarError(socket, QString("Servidor no tiene acceso al subsistema de negocio"));
-        return;
-    }
-
-    // Despachar al comando
-    comando->ejecutar(socket, payload, *sistema);
 }

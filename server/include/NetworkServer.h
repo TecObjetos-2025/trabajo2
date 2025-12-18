@@ -2,6 +2,7 @@
 
 #include <QTcpServer>
 #include <QSet>
+#include <QHash>
 #include <map>
 #include <memory>
 #include <QString>
@@ -39,5 +40,6 @@ private:
 
     std::map<QString, std::shared_ptr<IComandoServidor>> comandos;
     QSet<QTcpSocket *> clientes;
+    QHash<QTcpSocket *, QByteArray> recvBuffers;
     SistemaPedidos *sistema = nullptr; // no owned
 };
