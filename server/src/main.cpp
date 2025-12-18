@@ -3,6 +3,7 @@
 #include "core/SistemaPedidos.h"
 #include "repositories/ProductRepository.h"
 #include "repositories/PedidoRepository.h"
+#include "NetworkServer.h"
 
 int main(int argc, char *argv[])
 {
@@ -16,6 +17,9 @@ int main(int argc, char *argv[])
 
     // Inyectar repositorios en SistemaPedidos
     SistemaPedidos sistema(productRepository, pedidoRepository);
+
+    // Crear y arrancar servidor de red (usa el subsistema de pedidos)
+    NetworkServer servidor(&sistema);
 
     // Mantener la app viva
     return app.exec();
