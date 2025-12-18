@@ -9,6 +9,7 @@
 #include "core/SistemaPedidos.h"
 #include "api/Protocolo.h"
 #include "api/ApiDTOs.h"
+#include "NetworkProtocol.h"
 
 void CmdGetMenu::ejecutar(QTcpSocket *clientSocket, const QJsonObject & /*payload*/, SistemaPedidos &sistema)
 {
@@ -29,12 +30,5 @@ void CmdGetMenu::ejecutar(QTcpSocket *clientSocket, const QJsonObject & /*payloa
     response.insert(Protocolo::KEY_STATUS, QString("OK"));
     response.insert(Protocolo::KEY_DATA, arr);
 
-    QJsonDocument doc(response);
-    QByteArray bytes = doc.toJson(QJsonDocument::Compact);
-
-    if (clientSocket && clientSocket->isOpen())
-    {
-        clientSocket->write(bytes);
-        clientSocket->flush();
-    }
+    NetworkProtocol::sendJson(clientSocket, response);
 }

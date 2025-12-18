@@ -9,6 +9,7 @@
 #include "core/SistemaPedidos.h"
 #include "api/Protocolo.h"
 #include "api/ApiDTOs.h"
+#include "NetworkProtocol.h"
 
 void CmdAddOrder::ejecutar(QTcpSocket *clientSocket, const QJsonObject &payload, SistemaPedidos &sistema)
 {
@@ -18,9 +19,7 @@ void CmdAddOrder::ejecutar(QTcpSocket *clientSocket, const QJsonObject &payload,
         QJsonObject resp;
         resp.insert(Protocolo::KEY_STATUS, QString("ERROR"));
         resp.insert(Protocolo::KEY_MSG, QString("Campo 'cliente' faltante o inválido"));
-        QJsonDocument d(resp);
-        if (clientSocket && clientSocket->isOpen())
-            clientSocket->write(d.toJson(QJsonDocument::Compact));
+        NetworkProtocol::sendJson(clientSocket, resp);
         return;
     }
 
@@ -29,9 +28,7 @@ void CmdAddOrder::ejecutar(QTcpSocket *clientSocket, const QJsonObject &payload,
         QJsonObject resp;
         resp.insert(Protocolo::KEY_STATUS, QString("ERROR"));
         resp.insert(Protocolo::KEY_MSG, QString("Campo 'items' faltante o inválido"));
-        QJsonDocument d(resp);
-        if (clientSocket && clientSocket->isOpen())
-            clientSocket->write(d.toJson(QJsonDocument::Compact));
+        NetworkProtocol::sendJson(clientSocket, resp);
         return;
     }
 
@@ -64,9 +61,7 @@ void CmdAddOrder::ejecutar(QTcpSocket *clientSocket, const QJsonObject &payload,
             QJsonObject resp;
             resp.insert(Protocolo::KEY_STATUS, QString("ERROR"));
             resp.insert(Protocolo::KEY_MSG, QString("Cada item debe ser un objeto con 'productoId' y 'cantidad'"));
-            QJsonDocument d(resp);
-            if (clientSocket && clientSocket->isOpen())
-                clientSocket->write(d.toJson(QJsonDocument::Compact));
+            NetworkProtocol::sendJson(clientSocket, resp);
             return;
         }
         QJsonObject itm = v.toObject();
@@ -76,9 +71,7 @@ void CmdAddOrder::ejecutar(QTcpSocket *clientSocket, const QJsonObject &payload,
             QJsonObject resp;
             resp.insert(Protocolo::KEY_STATUS, QString("ERROR"));
             resp.insert(Protocolo::KEY_MSG, QString("Items inválidos: se requiere 'productoId' y 'cantidad' numéricos"));
-            QJsonDocument d(resp);
-            if (clientSocket && clientSocket->isOpen())
-                clientSocket->write(d.toJson(QJsonDocument::Compact));
+            NetworkProtocol::sendJson(clientSocket, resp);
             return;
         }
 
@@ -107,17 +100,13 @@ void CmdAddOrder::ejecutar(QTcpSocket *clientSocket, const QJsonObject &payload,
         QJsonObject resp;
         resp.insert(Protocolo::KEY_STATUS, QString("OK"));
         resp.insert(Protocolo::KEY_MSG, QString("Pedido recibido y encolado"));
-        QJsonDocument d(resp);
-        if (clientSocket && clientSocket->isOpen())
-            clientSocket->write(d.toJson(QJsonDocument::Compact));
+        NetworkProtocol::sendJson(clientSocket, resp);
     }
     catch (const std::exception &ex)
     {
         QJsonObject resp;
         resp.insert(Protocolo::KEY_STATUS, QString("ERROR"));
         resp.insert(Protocolo::KEY_MSG, QString::fromStdString(ex.what()));
-        QJsonDocument d(resp);
-        if (clientSocket && clientSocket->isOpen())
-            clientSocket->write(d.toJson(QJsonDocument::Compact));
+        NetworkProtocol::sendJson(clientSocket, resp);
     }
 }

@@ -4,12 +4,17 @@
 #include "repositories/ProductRepository.h"
 #include "repositories/PedidoRepository.h"
 #include "NetworkServer.h"
+#include "db/DatabaseManager.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
-    // Crear repositorios y cargar datos
+    // Inicializar la base de datos en memoria y poblarla con seed.sql (solo para pruebas)
+    DatabaseManager::instance().inicializarTablas();
+    DatabaseManager::instance().seedData();
+
+    // Crear repositorios y cargar datos desde la DB
     auto productRepository = std::make_shared<ProductRepository>();
     productRepository->loadFromDB();
 
