@@ -10,6 +10,7 @@ file(GLOB TEST_SOURCES
 
 # Excluir testes Qt (se compilan por separado en network_proxy_tests)
 list(REMOVE_ITEM TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_network_proxy_async.cpp)
+list(REMOVE_ITEM TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_network_proxy_orders.cpp)
 
 file(GLOB DBMANAGER_SRC "../server/src/db/DatabaseManager.cpp")
 
@@ -22,6 +23,7 @@ set(SERVER_SOURCES
     ../server/src/NetworkServer.cpp
     ../server/src/CmdGetMenu.cpp
     ../server/src/CmdAddOrder.cpp
+    ../server/src/commands/CmdGetOrders.cpp
     ../server/src/models/Administrador.cpp
     ../server/src/models/Cliente.cpp
     ../server/src/models/Cocinero.cpp
@@ -79,6 +81,12 @@ add_executable(network_proxy_tests
     ../client/src/NetworkClientProxy.cpp
 )
 
+# Integration Qt test for broadcast
+add_executable(network_proxy_broadcast_integration
+    test_network_proxy_broadcast_integration.cpp
+    ../client/src/NetworkClientProxy.cpp
+)
+
 target_include_directories(network_proxy_tests PRIVATE
     ../client/src
     ../common/include
@@ -90,3 +98,60 @@ target_link_libraries(network_proxy_tests
 )
 
 add_test(NAME NetworkProxyAsyncTests COMMAND network_proxy_tests)
+
+# --- Broadcast integration test target ---
+target_include_directories(network_proxy_broadcast_integration PRIVATE
+    ../client/src
+    ../common/include
+)
+
+target_link_libraries(network_proxy_broadcast_integration
+    Qt6::Network
+    Qt6::Test
+)
+
+add_test(NAME NetworkProxyBroadcastIntegrationTests COMMAND network_proxy_broadcast_integration)
+
+# Test separado para verificar getPedidosActivos roundtrip
+add_executable(network_proxy_orders
+    test_network_proxy_orders.cpp
+    ../client/src/NetworkClientProxy.cpp
+)
+
+target_include_directories(network_proxy_orders PRIVATE
+    ../client/src
+    ../common/include
+)
+
+target_link_libraries(network_proxy_orders
+    Qt6::Network
+    Qt6::Test
+)
+
+add_test(NAME NetworkProxyOrdersTests COMMAND network_proxy_orders)
+
+# End-to-end test for ADD_ORDER -> EVT_NEW_ORDER
+add_executable(network_proxy_endtoend
+    test_network_proxy_endtoend.cpp
+    ../client/src/NetworkClientProxy.cpp
+    ../server/src/core/SistemaPedidos.cpp
+    ../server/src/repositories/ProductRepository.cpp
+    ../server/src/repositories/PedidoRepository.cpp
+    ../server/src/repositories/ClienteRepository.cpp
+    ../server/src/NetworkServer.cpp
+    ../server/src/CmdAddOrder.cpp
+    ../server/src/CmdGetMenu.cpp
+)
+
+target_include_directories(network_proxy_endtoend PRIVATE
+    ../client/src
+    ../server/include
+    ../common/include
+)
+
+target_link_libraries(network_proxy_endtoend
+    Qt6::Network
+    Qt6::Test
+)
+
+add_test(NAME NetworkProxyEndToEndTests COMMAND network_proxy_endtoend)
