@@ -7,6 +7,7 @@
 #include "api/ApiDTOs.h"
 #include "repositories/ProductRepository.h"
 #include "repositories/PedidoRepository.h"
+#include "repositories/ClienteRepository.h"
 #include <QtSql/QSqlQuery>
 
 // Mock simple para MenuCafeteria y Producto si es necesario
@@ -21,8 +22,9 @@ TEST(SistemaPedidosTest, InicializarMenuCargaProductosDesdeDB)
     auto repo = std::make_shared<ProductRepository>();
     repo->loadFromDB();
     auto orderRepo = std::make_shared<PedidoRepository>();
+    auto clienteRepo = std::make_shared<repos::ClienteRepository>();
 
-    SistemaPedidos sistema(repo, orderRepo);
+    SistemaPedidos sistema(repo, orderRepo, clienteRepo);
 
     // Verificar que los productos del seed están presentes
     const auto &productos = sistema.getProductos();
@@ -49,8 +51,9 @@ TEST(SistemaPedidosTest, FinalizarPedidoPersisteEnDB)
     auto repo = std::make_shared<ProductRepository>();
     repo->loadFromDB();
     auto orderRepo = std::make_shared<PedidoRepository>();
+    auto clienteRepo = std::make_shared<repos::ClienteRepository>();
 
-    SistemaPedidos sistema(repo, orderRepo);
+    SistemaPedidos sistema(repo, orderRepo, clienteRepo);
 
     // Crear cliente y producto
     auto cliente = std::make_shared<Cliente>(1, "Carlos Juarez", "12345678");

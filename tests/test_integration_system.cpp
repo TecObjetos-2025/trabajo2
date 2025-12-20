@@ -51,7 +51,8 @@ TEST(IntegrationTest, FullSystemFlow)
     // Crear y cargar repositorio (o dejarlo vacio y usar agregarProducto)
     auto repo = std::make_shared<ProductRepository>();
     auto orderRepo = std::make_shared<PedidoRepository>();
-    SistemaPedidos sistema(repo, orderRepo);
+    auto clienteRepo = std::make_shared<repos::ClienteRepository>();
+    SistemaPedidos sistema(repo, orderRepo, clienteRepo);
 
     // 1. Setear Datos
     auto prod1 = std::make_shared<Producto>(1, "Cafe", 5.0, "Bebidas");

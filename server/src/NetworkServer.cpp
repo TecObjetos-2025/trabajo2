@@ -1,7 +1,8 @@
 #include "NetworkServer.h"
 
-#include "CmdGetMenu.h"
-#include "CmdAddOrder.h"
+#include "commands/CmdGetMenu.h"
+#include "commands/CmdAddOrder.h"
+#include "commands/CmdGetOrders.h"
 #include "api/Protocolo.h"
 
 #include <QHostAddress>
@@ -30,6 +31,7 @@ NetworkServer::NetworkServer(SistemaPedidos *sistemaPtr, QObject *parent)
     // Registrar comandos disponibles
     comandos.insert({Protocolo::CMD_GET_MENU, std::make_shared<CmdGetMenu>()});
     comandos.insert({Protocolo::CMD_ADD_ORDER, std::make_shared<CmdAddOrder>()});
+    comandos.insert({Protocolo::CMD_GET_ORDERS, std::make_shared<CmdGetOrders>()});
 }
 
 std::shared_ptr<IComandoServidor> NetworkServer::getComando(const QString &cmd) const
@@ -50,23 +52,56 @@ void NetworkServer::incomingConnection(qintptr socketDescriptor)
         return;
     }
 
-    clientes.insert(socket);
+    // Añadir a la lista de conectados y a estructuras internas
+    clientesConectados.append(socket);
+
+    qDebug() << "NetworkServer: cliente conectado, total=" << clientesConectados.count();
 
     connect(socket, &QTcpSocket::readyRead, this, &NetworkServer::onMensajeRecibido);
-    connect(socket, &QTcpSocket::disconnected, this, &NetworkServer::onClienteDesconectado);
-
-    std::cout << "NetworkServer: cliente conectado" << std::endl;
+    // Cuando el cliente se desconecte, removerlo de la lista de conectados
+    connect(socket, &QTcpSocket::disconnected, this, [this]()
+            { this->onClienteDesconectado(); });
+    // También conectar al slot que borra y limpia la entrada del buffer
+    connect(socket, &QTcpSocket::disconnected, this, [this, socket]()
+            { this->removerCliente(socket); });
 }
 
 void NetworkServer::onClienteDesconectado()
 {
     QTcpSocket *socket = qobject_cast<QTcpSocket *>(sender());
     if (!socket)
+    {
+        qDebug() << "NetworkServer::onClienteDesconectado - sender() no es QTcpSocket*";
         return;
-    clientes.remove(socket);
+    }
+
+    qDebug() << "NetworkServer: onClienteDesconectado() recibido para socket" << socket;
+
+    // Limpieza básica: quitar buffer y eliminar socket si sigue válido
     recvBuffers.remove(socket);
     socket->deleteLater();
-    std::cout << "NetworkServer: cliente desconectado" << std::endl;
+    qDebug() << "NetworkServer: cliente desconectado y recursos liberados";
+}
+
+void NetworkServer::removerCliente(QTcpSocket *socket)
+{
+    if (!socket)
+    {
+        qDebug() << "NetworkServer::removerCliente - socket nulo";
+        return;
+    }
+
+    // Quitar de la lista de conectados
+    int idx = clientesConectados.indexOf(socket);
+    if (idx != -1)
+    {
+        clientesConectados.removeAt(idx);
+        qDebug() << "NetworkServer: removerCliente - socket removido, total=" << clientesConectados.count();
+    }
+    else
+    {
+        qDebug() << "NetworkServer: removerCliente - socket no encontrado en la lista";
+    }
 }
 
 void NetworkServer::enviarError(QTcpSocket *socket, const QString &mensaje)
@@ -75,6 +110,49 @@ void NetworkServer::enviarError(QTcpSocket *socket, const QString &mensaje)
     resp.insert(Protocolo::KEY_STATUS, QString("ERROR"));
     resp.insert(Protocolo::KEY_MSG, mensaje);
     NetworkProtocol::sendJson(socket, resp);
+}
+
+void NetworkServer::difundirEvento(const std::string &jsonEvento)
+{
+    // Intentar parsear el string JSON para enviar como QJsonObject
+    QJsonParseError err;
+    QJsonDocument doc = QJsonDocument::fromJson(QByteArray::fromStdString(jsonEvento), &err);
+    if (err.error != QJsonParseError::NoError || !doc.isObject())
+    {
+        qDebug() << "NetworkServer::difundirEvento - JSON inválido:" << err.errorString();
+        return;
+    }
+    QJsonObject obj = doc.object();
+
+    qDebug() << "NetworkServer::difundirEvento - enviando evento a" << clientesConectados.count() << "clientes";
+    qDebug() << "NetworkServer::difundirEvento - payload:" << QJsonDocument(obj).toJson(QJsonDocument::Compact);
+    for (QTcpSocket *sock : clientesConectados)
+    {
+        if (!sock)
+            continue;
+        qDebug() << "NetworkServer::difundirEvento - sock state=" << sock->state();
+        if (sock->state() == QAbstractSocket::ConnectedState)
+        {
+            NetworkProtocol::sendJson(sock, obj);
+            qDebug() << "NetworkServer::difundirEvento - evento enviado a" << sock;
+        }
+        else
+        {
+            qDebug() << "NetworkServer::difundirEvento - socket no conectado, state=" << sock->state();
+        }
+    }
+}
+
+void NetworkServer::onNuevosPedidosEnCola()
+{
+    // Construir JSON simple para notificar
+    QJsonObject evt;
+    evt.insert(Protocolo::KEY_CMD, Protocolo::EVT_NEW_ORDER);
+    // payload vacío por ahora
+
+    QJsonDocument doc(evt);
+    std::string s = doc.toJson(QJsonDocument::Compact).toStdString();
+    difundirEvento(s);
 }
 
 void NetworkServer::onMensajeRecibido()
@@ -147,3 +225,5 @@ void NetworkServer::onMensajeRecibido()
         comando->ejecutar(socket, payload, *sistema);
     }
 }
+// For Qt's moc when building in tests (ensures meta-object is linked into this TU)
+#include "NetworkServer.moc"

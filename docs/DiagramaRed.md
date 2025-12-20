@@ -85,6 +85,44 @@ Las claves del protocolo (ej: `KEY_CMD`, `KEY_PAYLOAD`, `KEY_STATUS`, `KEY_MSG`,
 
 ---
 
+## Eventos Push
+
+### Descripción
+
+El sistema soporta eventos push del servidor a los clientes para notificar sucesos globales (p. ej. `EVT_NEW_ORDER`) sin que el cliente tenga que preguntar constantemente.
+
+### Protocolo `EVT_NEW_ORDER`
+
+- Tipo de mensaje: framed JSON (4 bytes BE + JSON body)
+- Campos clave:
+  - `cmd`: `EVT_NEW_ORDER`
+  - `payload` (opcional): metadata del evento (por ejemplo `id_pedido`, `timestamp`)
+- Ejemplo de JSON de evento:
+
+```json
+{
+  "cmd": "EVT_NEW_ORDER",
+  "payload": { "id_pedido": 123, "timestamp": "2025-12-20T12:34:56Z" }
+}
+```
+
+### Discriminación eventos vs respuestas
+
+- Respuestas a peticiones:
+  - Contienen `KEY_STATUS` (OK/ERROR) y opcionalmente `KEY_DATA`.
+  - Se consideran _responses_ (server → requestor).
+- Eventos push:
+  - Contienen `KEY_CMD` con un valor de evento (p. ej. `EVT_NEW_ORDER`).
+  - Normalmente **no** contienen `KEY_STATUS` y no están ligados a una petición en curso.
+- Cliente (`NetworkClientProxy`):
+  - Si `KEY_CMD == EVT_NEW_ORDER` → **evento push**: se notifica al observador (debounce con `QTimer::singleShot(50, ...)` para evitar races con respuestas grandes en tránsito).
+  - Si `KEY_STATUS` está presente → **respuesta** a una petición (se encola en `colaRespuestas` y despierta esperas en `enviarRequestYEsperarRespuesta`).
+  - Si se recibe una respuesta que **no coincide** con la petición actual, se conserva en `colaRespuestas` y se ignora para la espera actual (esto evita consumir respuestas de otras peticiones concurrentes).
+
+> Nota: Para eliminar heurísticas y hacer el protocolo más robusto, se recomienda introducir `request_id` para correlación de request/response en una futura iteración (WBS‑4).
+
+---
+
 ## Manejo de errores y robustez ⚠️
 
 - Framing: el prefijo de longitud evita problemas de mensajes concatenados o incompletos en TCP.

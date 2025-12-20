@@ -1,7 +1,10 @@
 #include "mainwindow.h"
+#include "NetworkClientProxy.h"
+#include "../../common/include/api/Protocolo.h"
 
 #include <QApplication>
 #include <QStyleFactory>
+#include <QMessageBox>
 
 int main(int argc, char *argv[])
 {
@@ -175,7 +178,16 @@ int main(int argc, char *argv[])
             background-color: #0fce4d;
         }
     )");
-    MainWindow w;
+    // Crear NetworkClientProxy sin auto-conectar (evitar doble intento)
+    NetworkClientProxy *proxy = new NetworkClientProxy(QStringLiteral(""), 0);
+
+    QObject::connect(proxy, &NetworkClientProxy::errorOcurrido, [](const QString &msg)
+                     { QMessageBox::critical(nullptr, "Error de Conexión", msg); });
+
+    // Intentar conectar (emitirá errorOcurrido si falla)
+    proxy->conectar(QStringLiteral("127.0.0.1"), Protocolo::DEFAULT_PORT);
+
+    MainWindow w(proxy);
     w.show();
     return a.exec();
 }

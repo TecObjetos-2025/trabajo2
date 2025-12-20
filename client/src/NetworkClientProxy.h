@@ -2,14 +2,19 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QQueue>
+#include <QByteArray>
+#include <QEventLoop>
 #include <vector>
 #include <memory>
 #include <stdexcept>
 
 #include "../../common/include/api/ICoreSistema.h"
 
-class NetworkClientProxy : public ICoreSistema
+class NetworkClientProxy : public QObject, public ICoreSistema
 {
+    Q_OBJECT
+
 public:
     explicit NetworkClientProxy(const QString &host = QStringLiteral("127.0.0.1"), quint16 port = 1234);
     ~NetworkClientProxy() override;
@@ -28,11 +33,39 @@ public:
     std::vector<InfoPedido> getPedidosActivos() override;
     void procesarSiguientePedido() override;
 
+signals:
+    // Emitido cuando llega una respuesta JSON completa (a cualquier petición)
+    void respuestaRecibida(const QJsonObject &obj);
+
+    // Señal para informar errores de conexión u otros errores de socket
+    void errorOcurrido(const QString &mensaje);
+
+public slots:
+    // Intenta conectar al host/puerto provistos y emite errorOcurrido en caso de fallo
+    void conectar(const QString &host_, quint16 port_);
+
+private slots:
+    // Slot asíncrono que procesa datos entrantes del socket y extrae mensajes framed
+    void onDatosRecibidos();
+
 private:
     QTcpSocket *socket = nullptr;
     QString host;
     quint16 port = 0;
 
-    // Helper: send request and wait for a single framed JSON response
+    // Buffer para datos parciales recibidos
+    QByteArray bufferAcumulado;
+
+    // Cola de respuestas JSON recibidas
+    QQueue<QJsonObject> colaRespuestas;
+
+    // Observador (UI) que será notificado de eventos push (ej: EVT_NEW_ORDER)
+    std::shared_ptr<IObservadorCore> observador = nullptr;
+
+    // Enviar una petición y esperar la respuesta (bloqueante)
     QJsonObject enviarRequestYEsperarRespuesta(const QString &cmd, const QJsonObject &payload, int timeoutMs = 3000);
+
+public:
+    // Test helper: inyectar bytes crudos como si vinieran del socket (para tests sin red)
+    void feedRawDataForTest(const QByteArray &data);
 };

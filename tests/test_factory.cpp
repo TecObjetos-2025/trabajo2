@@ -25,8 +25,8 @@ TEST(FactoryTest, CreateCliente)
 
 TEST(FactoryTest, CreateCocinero)
 {
-    // Incluir un puntero nulo para SistemaPedidos por simplicidad
-    SistemaPedidos sistema = SistemaPedidos(nullptr, nullptr);
+    // Incluir punteros nulos para SistemaPedidos por simplicidad
+    SistemaPedidos sistema = SistemaPedidos(nullptr, nullptr, nullptr);
     auto cocinero = CafeteriaFactory::crearCocinero(2, "Chef", "C001", &sistema);
 
     ASSERT_NE(cocinero, nullptr);

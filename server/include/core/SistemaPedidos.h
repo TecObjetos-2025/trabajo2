@@ -9,6 +9,7 @@
 #include <atomic>
 #include "repositories/ProductRepository.h"
 #include "repositories/PedidoRepository.h"
+#include "repositories/ClienteRepository.h"
 
 class Persona;
 class Pedido;
@@ -49,9 +50,16 @@ private:
     std::atomic<int> proximoIdPersona{1};
 
 public:
-    SistemaPedidos(std::shared_ptr<ProductRepository> prodRepo, std::shared_ptr<PedidoRepository> orderRepo);
+    SistemaPedidos(std::shared_ptr<ProductRepository> prodRepo, std::shared_ptr<PedidoRepository> orderRepo, std::shared_ptr<repos::ClienteRepository> clienteRepo);
     ~SistemaPedidos();
 
+private:
+    /**
+     * @brief Repositorio de clientes (acceso a la tabla customers).
+     */
+    std::shared_ptr<repos::ClienteRepository> clienteRepository;
+
+public:
     // Delegación y gestión
     void mostrarMenu() const;
     /**

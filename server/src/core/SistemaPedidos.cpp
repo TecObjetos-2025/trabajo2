@@ -12,6 +12,8 @@
 #include <iomanip>   // Formatear salida de precios
 #include "core/SistemaPedidos.h"
 #include "models/Persona.h"
+#include <QtSql/QSqlQuery>
+#include "db/DatabaseManager.h"
 #include "models/Cliente.h"
 #include "models/Producto.h"
 #include "models/ItemPedido.h"
@@ -29,8 +31,8 @@
  * @details Permite registrar personas, clientes, crear pedidos y notificar observadores (patrón Observer).
  */
 // Constructor
-SistemaPedidos::SistemaPedidos(std::shared_ptr<ProductRepository> prodRepo, std::shared_ptr<PedidoRepository> orderRepo)
-    : productRepository(prodRepo), pedidoRepository(orderRepo)
+SistemaPedidos::SistemaPedidos(std::shared_ptr<ProductRepository> prodRepo, std::shared_ptr<PedidoRepository> orderRepo, std::shared_ptr<repos::ClienteRepository> clienteRepo)
+    : productRepository(prodRepo), pedidoRepository(orderRepo), clienteRepository(clienteRepo)
 {
 }
 
@@ -174,7 +176,6 @@ void SistemaPedidos::registrarObservador(std::shared_ptr<IObservadorCore> observ
             });
         if (it != observadores.end())
         {
-            observadores.push_back(observador);
             std::cout << "[SISTEMA] Observador ya registrado, omitiendo..." << std::endl;
             return;
         }
@@ -254,6 +255,30 @@ void SistemaPedidos::finalizarPedido(
     const std::string &id_descuentos)
 {
     // Crear pedido completo usando la Factory
+    // Si el cliente no está registrado en memoria, intentar buscar en la BD y registrarlo
+    auto it = std::find_if(personas.begin(), personas.end(), [&](const std::shared_ptr<Persona> &p)
+                           {
+        auto c = std::dynamic_pointer_cast<Cliente>(p);
+        return c && c->getNombre() == cliente; });
+
+    if (it == personas.end())
+    {
+        // Intentar buscar en la BD por nombre
+        QSqlQuery q(DatabaseManager::instance().database());
+        q.prepare("SELECT id, name, tax_id FROM customers WHERE name = ?");
+        q.addBindValue(QString::fromStdString(cliente));
+        if (q.exec() && q.next())
+        {
+            int id = q.value(0).toInt();
+            QString name = q.value(1).toString();
+            QString tax = q.value(2).toString();
+            // Crear Cliente y registrar
+            auto nuevoCliente = CafeteriaFactory::crearCliente(id, name.toStdString(), tax.toStdString());
+            registrarPersona(nuevoCliente);
+            std::cout << "[API] Cliente registrado desde BD: " << name.toStdString() << std::endl;
+        }
+    }
+
     auto pedido = CafeteriaFactory::crearPedidoCompleto(
         proximoIdPersona++, // ID dummy, puedes mejorar esto
         cliente,

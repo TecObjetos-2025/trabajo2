@@ -33,3 +33,11 @@ target_link_libraries(TestNetworkProxy PRIVATE Qt${QT_VERSION_MAJOR}::Network Qt
 target_link_libraries(CafeteriaClient PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 
 target_link_libraries(CafeteriaClient PRIVATE CafeteriaCommon)
+
+# Target helper para ejecutar el cliente con LD_PRELOAD para evitar conflicto con snap
+add_custom_target(run-client
+    COMMAND ${CMAKE_COMMAND} -E echo "Ejecutando CafeteriaClient (LD_PRELOAD workaround)..."
+    COMMAND ${CMAKE_COMMAND} -E env LD_PRELOAD=/lib/x86_64-linux-gnu/libpthread.so.0 ${CMAKE_BINARY_DIR}/client/CafeteriaClient
+    DEPENDS CafeteriaClient
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
