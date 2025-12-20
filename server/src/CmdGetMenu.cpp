@@ -1,4 +1,4 @@
-#include "CmdGetMenu.h"
+#include "commands/CmdGetMenu.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
