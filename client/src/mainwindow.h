@@ -18,7 +18,7 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow
+class MainWindow : public QMainWindow, public IObservadorCore
 {
     Q_OBJECT
 
@@ -29,7 +29,8 @@ class MainWindow : public QMainWindow
     };
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    // Nueva firma del constructor que recibe un puntero crudo al core
+    MainWindow(ICoreSistema *core, QWidget *parent = nullptr);
     ~MainWindow();
 
 private:
@@ -37,11 +38,17 @@ private:
 
     // Componentes 'backend'
 
-    // Interfaz de desacoplamiento con el core del sistema
+    // Interfaz de desacoplamiento con el core del sistema (usado por el UI)
     std::shared_ptr<ICoreSistema> coreSistema;
+
+    // Puntero crudo al core inyectado (no responsable de la vida)
+    ICoreSistema *m_core = nullptr;
 
     // "Traductor" de observadores C++ a señales Qt
     std::shared_ptr<CoreQtAdapter> coreAdapter;
+
+    // Flag para inicializar una sola vez en showEvent
+    bool m_iniciado = false;
 
     // Métodos auxiliares
 
@@ -101,5 +108,13 @@ private slots:
      * @brief Se activa cuando el core notifica que ocurrió un error.
      */
     void onCoreError(QString mensaje);
+
+    // Procesar respuestas que provengan del proxy (respuestaRecibida)
+    void procesarRespuesta(const QJsonObject &obj);
+
+    // IObservadorCore implementation (para poder registrarnos como observador)
+    void onNuevosPedidosEnCola() override;
+    void onPedidoTerminado(int id_pedido) override;
+    void onError(const std::string &mensaje) override;
 };
 #endif // MainWindow_H

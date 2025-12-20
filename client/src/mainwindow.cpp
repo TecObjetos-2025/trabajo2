@@ -5,45 +5,65 @@
 
 #include <QMessageBox>
 #include <QDebug>
+#include <QJsonDocument>
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow)
+MainWindow::MainWindow(ICoreSistema *core, QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::MainWindow), m_core(core)
 {
     ui->setupUi(this);
 
     qDebug() << "[MainWindow] Inicializando componentes backend...";
 
-    // Inicializar el core real
-    // auto sistema = std::make_shared<SistemaPedidos>();
-    // sistema->inicializarMenu(); // Asegurar que el menu tenga datos
-
-    // Registrar un cliente para pruebas
-    // auto clienteDummy = CafeteriaFactory::crearCliente(1, "Cliente Prueba", "999-888-777");
-    // sistema->registrarPersona(clienteDummy);
-
-    // coreSistema = sistema;
-
-    coreSistema = nullptr;
+    // wrappear el puntero crudo en shared_ptr sin ownership
+    if (m_core)
+    {
+        coreSistema = std::shared_ptr<ICoreSistema>(m_core, [](ICoreSistema *)
+                                                    {
+            /* no-op deleter: la vida la gestiona quien creó el proxy */ });
+    }
+    else
+    {
+        coreSistema = nullptr;
+    }
 
     coreAdapter = std::make_shared<CoreQtAdapter>();
 
-    // Registrar observador
-    coreSistema->registrarObservador(coreAdapter);
+    // Registrar observador SOLO si hay un core válido
+    if (coreSistema)
+    {
+        coreSistema->registrarObservador(coreAdapter);
+    }
 
     // Conectar señales y slots
     conectarSenalesYSlots();
 
-    // Cargar datos iniciales en la UI
-    cargarMenuEnUI();
-    cargarPedidosEnUI();
-
-    // Descuentos al ComboBox
-    ui->comboDescuentos->clear();
-    auto descuentos = coreSistema->getDescuentosDisponibles();
-    for (const auto &desc : descuentos)
+    // Cargar datos iniciales en la UI (si hay core)
+    if (coreSistema)
     {
-        ui->comboDescuentos->addItem(QString::fromStdString(desc.descripcion),
-                                     QString::fromStdString(desc.id_descuento));
+        cargarMenuEnUI();
+        cargarPedidosEnUI();
+
+        // Popular descuentos
+        ui->comboDescuentos->clear();
+        auto descuentos = coreSistema->getDescuentosDisponibles();
+        for (const auto &desc : descuentos)
+        {
+            ui->comboDescuentos->addItem(QString::fromStdString(desc.descripcion),
+                                         QString::fromStdString(desc.id_descuento));
+        }
+    }
+
+    // Si el core es concretamente un NetworkClientProxy, conectamos su señal de respuestas
+    if (m_core)
+    {
+        // Intentar hacer cast dinámico
+        QObject *obj = dynamic_cast<QObject *>(m_core);
+        if (obj)
+        {
+            // Usamos Qt::DirectConnection ya que todo corre en el mismo hilo por ahora
+            connect(obj, SIGNAL(respuestaRecibida(QJsonObject)), this, SLOT(procesarRespuesta(QJsonObject)), Qt::DirectConnection);
+            connect(obj, SIGNAL(errorOcurrido(QString)), this, SLOT(onCoreError(QString)), Qt::QueuedConnection);
+        }
     }
 }
 
@@ -278,4 +298,41 @@ void MainWindow::onCoreError(QString mensaje)
 {
     qDebug() << "[MainWindow] Slot 'onCoreError' activado con mensaje:" << mensaje;
     QMessageBox::critical(this, "Error del Sistema", mensaje);
+}
+
+void MainWindow::procesarRespuesta(const QJsonObject &obj)
+{
+    qDebug() << "MainWindow::procesarRespuesta - recibida respuesta:" << QJsonDocument(obj).toJson(QJsonDocument::Compact);
+    // Por ahora simplemente refrescamos el menú invocando al core (manteniendo compatibilidad)
+    if (m_core)
+    {
+        try
+        {
+            cargarMenuEnUI();
+        }
+        catch (...)
+        {
+            qWarning() << "MainWindow::procesarRespuesta - error al actualizar UI";
+        }
+    }
+}
+
+// IObservadorCore implementation
+void MainWindow::onNuevosPedidosEnCola()
+{
+    qDebug() << "MainWindow::onNuevosPedidosEnCola - llamado por el core";
+    // Actualizar UI de manera segura
+    QMetaObject::invokeMethod(this, "onPedidosActualizados", Qt::QueuedConnection);
+}
+
+void MainWindow::onPedidoTerminado(int /*id_pedido*/)
+{
+    qDebug() << "MainWindow::onPedidoTerminado - actualizar lista";
+    QMetaObject::invokeMethod(this, "onPedidosActualizados", Qt::QueuedConnection);
+}
+
+void MainWindow::onError(const std::string &mensaje)
+{
+    qDebug() << "MainWindow::onError -" << QString::fromStdString(mensaje);
+    QMetaObject::invokeMethod(this, "onCoreError", Qt::QueuedConnection, Q_ARG(QString, QString::fromStdString(mensaje)));
 }
