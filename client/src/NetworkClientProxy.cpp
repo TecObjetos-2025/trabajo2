@@ -259,6 +259,57 @@ void NetworkClientProxy::onDatosRecibidos()
     }
 }
 
+// Test helper: inyectar bytes crudos como si vinieran del socket (para tests sin red)
+void NetworkClientProxy::feedRawDataForTest(const QByteArray &data)
+{
+    qDebug() << "NetworkClientProxy::feedRawDataForTest - injecting" << data.size() << "bytes";
+    bufferAcumulado.append(data);
+    // Reutilizar la lógica de procesamiento de onDatosRecibidos sin necesidad de socket
+    // Para no duplicar mucho código, simulamos que ha llegado un chunk
+    while (bufferAcumulado.size() >= static_cast<int>(sizeof(quint32)))
+    {
+        QByteArray hdr = bufferAcumulado.left(static_cast<int>(sizeof(quint32)));
+        QDataStream ds(hdr);
+        ds.setByteOrder(QDataStream::BigEndian);
+        quint32 len = 0;
+        ds >> len;
+        if (bufferAcumulado.size() < static_cast<int>(sizeof(quint32) + len))
+            break;
+
+        QByteArray body = bufferAcumulado.mid(static_cast<int>(sizeof(quint32)), static_cast<int>(len));
+        bufferAcumulado.remove(0, static_cast<int>(sizeof(quint32) + len));
+
+        QJsonParseError err;
+        QJsonDocument doc = QJsonDocument::fromJson(body, &err);
+        if (err.error != QJsonParseError::NoError || !doc.isObject())
+        {
+            qWarning() << "NetworkClientProxy::feedRawDataForTest - JSON malformado:" << err.errorString();
+            continue;
+        }
+
+        QJsonObject obj = doc.object();
+        // Reusar la misma discriminación que en onDatosRecibidos
+        if (obj.contains(Protocolo::KEY_CMD) && obj.value(Protocolo::KEY_CMD).isString())
+        {
+            QString cmd = obj.value(Protocolo::KEY_CMD).toString();
+            if (cmd == Protocolo::EVT_NEW_ORDER)
+            {
+                if (observador)
+                    observador->onNuevosPedidosEnCola();
+                continue;
+            }
+        }
+        if (obj.contains(Protocolo::KEY_STATUS))
+        {
+            colaRespuestas.enqueue(obj);
+            emit respuestaRecibida(obj);
+            continue;
+        }
+        colaRespuestas.enqueue(obj);
+        emit respuestaRecibida(obj);
+    }
+}
+
 // Minimal stubs for other methods to satisfy the interface
 std::vector<InfoDescuento> NetworkClientProxy::getDescuentosDisponibles()
 {

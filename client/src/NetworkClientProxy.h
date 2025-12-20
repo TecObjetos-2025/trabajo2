@@ -57,4 +57,8 @@ private:
 
     // Enviar una petición y esperar la respuesta (bloqueante)
     QJsonObject enviarRequestYEsperarRespuesta(const QString &cmd, const QJsonObject &payload, int timeoutMs = 3000);
+
+public:
+    // Test helper: inyectar bytes crudos como si vinieran del socket (para tests sin red)
+    void feedRawDataForTest(const QByteArray &data);
 };
