@@ -22,7 +22,7 @@ public:
         emit notified();
     }
     void onPedidoTerminado(int /*id_pedido*/) override {}
-    void onError(const std::string &/*mensaje*/) override {}
+    void onError(const std::string & /*mensaje*/) override {}
 
     bool called;
 
