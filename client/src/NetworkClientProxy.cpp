@@ -275,10 +275,10 @@ void NetworkClientProxy::onDatosRecibidos()
             QString cmd = obj.value(Protocolo::KEY_CMD).toString();
             if (cmd == Protocolo::EVT_NEW_ORDER)
             {
-                qDebug() << "NetworkClientProxy: recibido evento EVT_NEW_ORDER";
+                qDebug() << "NetworkClientProxy: recibido evento EVT_NEW_ORDER" << QJsonDocument(obj).toJson(QJsonDocument::Compact);
                 if (observador)
                 {
-                    qDebug() << "NetworkClientProxy: notificando observador onNuevosPedidosEnCola";
+                    qDebug() << "NetworkClientProxy: observador presente:" << observador.get() << "use_count=" << observador.use_count() << " - notificando onNuevosPedidosEnCola";
                     observador->onNuevosPedidosEnCola();
                 }
                 else
@@ -370,7 +370,72 @@ double NetworkClientProxy::getPorcentajeIGV() const
 
 std::vector<InfoPedido> NetworkClientProxy::getPedidosActivos()
 {
-    return {};
+    qDebug() << "NetworkClientProxy::getPedidosActivos - solicitando al servidor";
+    QJsonObject payload; // vacío
+    QJsonObject resp;
+    try
+    {
+        resp = enviarRequestYEsperarRespuesta(Protocolo::CMD_GET_ORDERS, payload);
+    }
+    catch (const std::exception &ex)
+    {
+        qWarning() << "NetworkClientProxy::getPedidosActivos - error al solicitar pedidos:" << ex.what();
+        return {};
+    }
+
+    if (!resp.contains(Protocolo::KEY_STATUS) || !resp.value(Protocolo::KEY_STATUS).isString())
+    {
+        qWarning() << "NetworkClientProxy::getPedidosActivos - respuesta sin status";
+        return {};
+    }
+    QString status = resp.value(Protocolo::KEY_STATUS).toString();
+    if (status != "OK")
+    {
+        QString msg = resp.contains(Protocolo::KEY_MSG) ? resp.value(Protocolo::KEY_MSG).toString() : QString("Error desconocido");
+        qWarning() << "NetworkClientProxy::getPedidosActivos - status no OK:" << msg;
+        return {};
+    }
+
+    std::vector<InfoPedido> pedidos;
+    if (!resp.contains(Protocolo::KEY_DATA) || !resp.value(Protocolo::KEY_DATA).isArray())
+    {
+        qDebug() << "NetworkClientProxy::getPedidosActivos - respuesta OK pero sin data";
+        return pedidos;
+    }
+
+    QJsonArray arr = resp.value(Protocolo::KEY_DATA).toArray();
+    qDebug() << "NetworkClientProxy::getPedidosActivos - recibidos" << arr.size() << "pedidos";
+    for (const QJsonValue &v : arr)
+    {
+        if (!v.isObject())
+            continue;
+        QJsonObject o = v.toObject();
+        InfoPedido p;
+        p.id_pedido = o.value("id_pedido").toInt();
+        p.cliente = o.value("cliente").toString().toStdString();
+        p.estado = o.value("estado").toString().toStdString();
+        p.total_final = o.value("total_final").toDouble();
+
+        if (o.contains("items") && o.value("items").isArray())
+        {
+            QJsonArray itemsArr = o.value("items").toArray();
+            for (const QJsonValue &iv : itemsArr)
+            {
+                if (!iv.isObject())
+                    continue;
+                QJsonObject io = iv.toObject();
+                ItemPedidoInfo it;
+                it.nombreProducto = io.value("nombreProducto").toString().toStdString();
+                it.cantidad = io.value("cantidad").toInt();
+                it.precioUnitario = io.value("precioUnitario").toDouble();
+                p.items.push_back(it);
+            }
+        }
+
+        pedidos.push_back(p);
+    }
+
+    return pedidos;
 }
 
 void NetworkClientProxy::procesarSiguientePedido()

@@ -2,6 +2,7 @@
 
 #include "commands/CmdGetMenu.h"
 #include "commands/CmdAddOrder.h"
+#include "commands/CmdGetOrders.h"
 #include "api/Protocolo.h"
 
 #include <QHostAddress>
@@ -30,6 +31,7 @@ NetworkServer::NetworkServer(SistemaPedidos *sistemaPtr, QObject *parent)
     // Registrar comandos disponibles
     comandos.insert({Protocolo::CMD_GET_MENU, std::make_shared<CmdGetMenu>()});
     comandos.insert({Protocolo::CMD_ADD_ORDER, std::make_shared<CmdAddOrder>()});
+    comandos.insert({Protocolo::CMD_GET_ORDERS, std::make_shared<CmdGetOrders>()});
 }
 
 std::shared_ptr<IComandoServidor> NetworkServer::getComando(const QString &cmd) const
@@ -123,6 +125,7 @@ void NetworkServer::difundirEvento(const std::string &jsonEvento)
     QJsonObject obj = doc.object();
 
     qDebug() << "NetworkServer::difundirEvento - enviando evento a" << clientesConectados.count() << "clientes";
+    qDebug() << "NetworkServer::difundirEvento - payload:" << QJsonDocument(obj).toJson(QJsonDocument::Compact);
     for (QTcpSocket *sock : clientesConectados)
     {
         if (!sock)

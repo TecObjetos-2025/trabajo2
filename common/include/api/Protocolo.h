@@ -17,6 +17,8 @@ namespace Protocolo
     static const QString CMD_LOGIN = "LOGIN";
     static const QString CMD_GET_MENU = "GET_MENU";
     static const QString CMD_ADD_ORDER = "ADD_ORDER";
+    // Nuevo comando para obtener pedidos activos (vista Cocina)
+    static const QString CMD_GET_ORDERS = "GET_ORDERS";
 
     // Eventos (Push Notifications)
     static const QString EVT_NEW_ORDER = "EVT_NEW_ORDER";
