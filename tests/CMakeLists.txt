@@ -11,10 +11,14 @@ file(GLOB TEST_SOURCES
 file(GLOB DBMANAGER_SRC "../server/src/db/DatabaseManager.cpp")
 
 # Archivos del servidor necesarios para las pruebas
+set(CMAKE_AUTOMOC ON)
 set(SERVER_SOURCES
     ../server/src/core/CafeteriaFactory.cpp
     ../server/src/core/MenuCafeteria.cpp
     ../server/src/core/SistemaPedidos.cpp
+    ../server/src/NetworkServer.cpp
+    ../server/src/CmdGetMenu.cpp
+    ../server/src/CmdAddOrder.cpp
     ../server/src/models/Administrador.cpp
     ../server/src/models/Cliente.cpp
     ../server/src/models/Cocinero.cpp
@@ -40,16 +44,23 @@ add_executable(unit_tests
     ${SERVER_SOURCES}
 )
 
+# For Qt's AUTOMOC: ensure headers with Q_OBJECT are processed for this target
+target_sources(unit_tests PRIVATE
+    ../server/include/NetworkServer.h
+)
+
 target_include_directories(unit_tests PRIVATE
     ../server/include
     ../common/include
 )
 
-find_package(Qt6 REQUIRED COMPONENTS Sql)
+find_package(Qt6 REQUIRED COMPONENTS Sql Network Test)
 target_link_libraries(unit_tests
     GTest::gtest_main
     GTest::gmock
     Qt6::Sql
+    Qt6::Network
+    Qt6::Test
 )
 
 gtest_discover_tests(unit_tests)

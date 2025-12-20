@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QTcpServer>
-#include <QSet>
+#include <QList>
 #include <QHash>
 #include <map>
 #include <memory>
@@ -38,8 +38,18 @@ private slots:
 private:
     void enviarError(QTcpSocket *socket, const QString &mensaje);
 
+    // Mantener lista de clientes conectados para broadcast y gestión
+    QList<QTcpSocket *> clientesConectados;
+
+    // Recepción por socket (buffers) y mapa de comandos
     std::map<QString, std::shared_ptr<IComandoServidor>> comandos;
-    QSet<QTcpSocket *> clientes;
     QHash<QTcpSocket *, QByteArray> recvBuffers;
     SistemaPedidos *sistema = nullptr; // no owned
+
+    // Remover cliente (llamado en slot disconnected)
+    void removerCliente(QTcpSocket *socket);
+
+public:
+    // Accesor usado en tests TDD
+    int getClientesConectadosCount() const { return clientesConectados.count(); }
 };

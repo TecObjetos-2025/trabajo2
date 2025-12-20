@@ -1,7 +1,7 @@
 #include "NetworkServer.h"
 
-#include "CmdGetMenu.h"
-#include "CmdAddOrder.h"
+#include "commands/CmdGetMenu.h"
+#include "commands/CmdAddOrder.h"
 #include "api/Protocolo.h"
 
 #include <QHostAddress>
@@ -50,23 +50,49 @@ void NetworkServer::incomingConnection(qintptr socketDescriptor)
         return;
     }
 
-    clientes.insert(socket);
+    // Añadir a la lista de conectados y a estructuras internas
+    clientesConectados.append(socket);
+
+    qDebug() << "NetworkServer: cliente conectado, total=" << clientesConectados.count();
 
     connect(socket, &QTcpSocket::readyRead, this, &NetworkServer::onMensajeRecibido);
-    connect(socket, &QTcpSocket::disconnected, this, &NetworkServer::onClienteDesconectado);
-
-    std::cout << "NetworkServer: cliente conectado" << std::endl;
+    // Cuando el cliente se desconecte, removerlo de la lista de conectados
+    connect(socket, &QTcpSocket::disconnected, this, [this]() { this->onClienteDesconectado(); });
+    // También conectar al slot que borra y limpia la entrada del buffer
+    connect(socket, &QTcpSocket::disconnected, this, [this, socket]() { this->removerCliente(socket); });
 }
 
 void NetworkServer::onClienteDesconectado()
 {
     QTcpSocket *socket = qobject_cast<QTcpSocket *>(sender());
-    if (!socket)
+    if (!socket) {
+        qDebug() << "NetworkServer::onClienteDesconectado - sender() no es QTcpSocket*";
         return;
-    clientes.remove(socket);
+    }
+
+    qDebug() << "NetworkServer: onClienteDesconectado() recibido para socket" << socket;
+
+    // Limpieza básica: quitar buffer y eliminar socket si sigue válido
     recvBuffers.remove(socket);
     socket->deleteLater();
-    std::cout << "NetworkServer: cliente desconectado" << std::endl;
+    qDebug() << "NetworkServer: cliente desconectado y recursos liberados";
+}
+
+void NetworkServer::removerCliente(QTcpSocket *socket)
+{
+    if (!socket) {
+        qDebug() << "NetworkServer::removerCliente - socket nulo";
+        return;
+    }
+
+    // Quitar de la lista de conectados
+    int idx = clientesConectados.indexOf(socket);
+    if (idx != -1) {
+        clientesConectados.removeAt(idx);
+        qDebug() << "NetworkServer: removerCliente - socket removido, total=" << clientesConectados.count();
+    } else {
+        qDebug() << "NetworkServer: removerCliente - socket no encontrado en la lista";
+    }
 }
 
 void NetworkServer::enviarError(QTcpSocket *socket, const QString &mensaje)
@@ -147,3 +173,5 @@ void NetworkServer::onMensajeRecibido()
         comando->ejecutar(socket, payload, *sistema);
     }
 }
+// For Qt's moc when building in tests (ensures meta-object is linked into this TU)
+#include "NetworkServer.moc"
