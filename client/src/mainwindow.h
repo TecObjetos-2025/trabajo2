@@ -84,6 +84,9 @@ private slots:
      */
     void on_btnFinalizarPedido_clicked();
 
+    // Slot para enviar el pedido agrupado al servidor
+    void finalizarPedido();
+
     /**
      * @brief on_btnAnadirItem_clicked Slot llamado al hacer clic en el botón "Añadir Ítem".
      */

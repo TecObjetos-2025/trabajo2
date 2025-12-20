@@ -47,6 +47,9 @@ MainWindow::MainWindow(ICoreSistema *core, QWidget *parent)
     ui->lblTotal->setText(QString("$ %1").arg(m_totalActual, 0, 'f', 2));
     ui->btnFinalizarPedido->setEnabled(false);
 
+    // Conectar el botón Finalizar a nuestro nuevo slot finalizarPedido
+    connect(ui->btnFinalizarPedido, &QPushButton::clicked, this, &MainWindow::finalizarPedido);
+
     // Conectar la señal del proxy (si existe) para procesar respuestas
     if (m_core)
     {
@@ -256,43 +259,97 @@ void MainWindow::on_btnQuitarItem_clicked()
 
 void MainWindow::on_btnFinalizarPedido_clicked()
 {
-    qDebug() << "[MainWindow] Finalizando pedido...";
+    // Para compatibilidad llamamos a finalizarPedido que contiene la lógica nueva
+    finalizarPedido();
+}
 
-    // Recopilar datos del pedido
-    std::string cliente = ui->lineEditCliente->text().toStdString();
-    if (cliente.empty())
+void MainWindow::finalizarPedido()
+{
+    qDebug() << "MainWindow::finalizarPedido - preparando pedido para envío";
+
+    QString clienteQ = ui->lineEditCliente->text();
+    if (clienteQ.trimmed().isEmpty())
     {
         onCoreError("Por favor, ingrese el nombre del cliente.");
         return;
     }
 
-    std::string id_descuento = ui->comboDescuentos->currentData().toString().toStdString();
-
-    std::vector<ItemPedidoCrear> items;
+    // Agrupar por producto (id -> cantidad)
+    QMap<int, int> counts;
     for (int i = 0; i < ui->listaOrdenActual->count(); ++i)
     {
-        QListWidgetItem *item = ui->listaOrdenActual->item(i);
-        int productoId = item->data(Qt::UserRole).toInt();
-        items.push_back({productoId, 1}); // Cantidad fija de 1 por simplicidad
+        QListWidgetItem *itm = ui->listaOrdenActual->item(i);
+        int productoId = itm->data(Qt::UserRole).toInt();
+        counts[productoId] = counts.value(productoId, 0) + 1;
     }
 
-    if (items.empty())
+    if (counts.isEmpty())
     {
         onCoreError("El pedido no puede estar vacío.");
         return;
     }
 
-    // Llamar al 'API' del core
-    coreSistema->finalizarPedido(cliente, items, id_descuento);
+    // Construir vector<ItemPedidoCrear>
+    std::vector<ItemPedidoCrear> itemsVec;
+    for (auto it = counts.constBegin(); it != counts.constEnd(); ++it)
+    {
+        ItemPedidoCrear itc;
+        itc.productoId = it.key();
+        itc.cantidad = it.value();
+        itemsVec.push_back(itc);
+    }
+
+    // Obtener id_descuento
+    std::string id_descuento = ui->comboDescuentos->currentData().toString().toStdString();
+
+    // Mostrar JSON para depuración
+    QJsonObject payload;
+    payload.insert("cliente", clienteQ);
+    QJsonArray arr;
+    for (const auto &it : itemsVec)
+    {
+        QJsonObject o;
+        o.insert("productoId", it.productoId);
+        o.insert("cantidad", it.cantidad);
+        arr.append(o);
+    }
+    payload.insert("items", arr);
+    payload.insert("id_descuento", QString::fromStdString(id_descuento));
+    qDebug() << "MainWindow::finalizarPedido - JSON payload:" << QJsonDocument(payload).toJson(QJsonDocument::Compact);
+
+    // Enviar usando la API del core (que en el caso del proxy hará la llamada de red)
+    try
+    {
+        if (coreSistema)
+        {
+            coreSistema->finalizarPedido(clienteQ.toStdString(), itemsVec, id_descuento);
+        }
+        else if (m_core)
+        {
+            // fallback: intentar llamar al raw pointer
+            m_core->finalizarPedido(clienteQ.toStdString(), itemsVec, id_descuento);
+        }
+        else
+        {
+            onCoreError("No hay core conectado para enviar el pedido.");
+            return;
+        }
+    }
+    catch (const std::exception &ex)
+    {
+        onCoreError(ex.what());
+        return;
+    }
 
     // Limpiar UI
-    ui->lineEditCliente->clear();
     ui->listaOrdenActual->clear();
+    ui->lineEditCliente->clear();
     ui->comboDescuentos->setCurrentIndex(0);
+    m_totalActual = 0.0;
+    ui->lblTotal->setText(QString("$ %1").arg(m_totalActual, 0, 'f', 2));
+    ui->btnFinalizarPedido->setEnabled(false);
 
-    QMessageBox::information(this, "Pedido Creado", "El pedido ha sido creado y enviado a la cocina.");
-
-    // NOTA: La actualización de la cola de pedidos se hará vía señal del core
+    QMessageBox::information(this, "Pedido Enviado", "Pedido enviado correctamente al servidor.");
 }
 
 // Vista Cocina
