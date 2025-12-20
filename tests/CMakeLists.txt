@@ -8,9 +8,11 @@ file(GLOB TEST_SOURCES
     "test_*.cpp"
 )
 
-# Excluir testes Qt (se compilan por separado en network_proxy_tests)
+# Excluir testes Qt (se compilan por separado en targets específicos)
 list(REMOVE_ITEM TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_network_proxy_async.cpp)
 list(REMOVE_ITEM TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_network_proxy_orders.cpp)
+list(REMOVE_ITEM TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_network_proxy_broadcast_integration.cpp)
+list(REMOVE_ITEM TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_network_proxy_endtoend.cpp)
 
 file(GLOB DBMANAGER_SRC "../server/src/db/DatabaseManager.cpp")
 
@@ -133,14 +135,13 @@ add_test(NAME NetworkProxyOrdersTests COMMAND network_proxy_orders)
 # End-to-end test for ADD_ORDER -> EVT_NEW_ORDER
 add_executable(network_proxy_endtoend
     test_network_proxy_endtoend.cpp
-    ../client/src/NetworkClientProxy.cpp
-    ../server/src/core/SistemaPedidos.cpp
-    ../server/src/repositories/ProductRepository.cpp
-    ../server/src/repositories/PedidoRepository.cpp
-    ../server/src/repositories/ClienteRepository.cpp
-    ../server/src/NetworkServer.cpp
-    ../server/src/CmdAddOrder.cpp
-    ../server/src/CmdGetMenu.cpp
+    ${SERVER_SOURCES}
+    ${DBMANAGER_SRC}
+)
+
+# For Qt's AUTOMOC: ensure headers with Q_OBJECT are processed for this target
+target_sources(network_proxy_endtoend PRIVATE
+    ../server/include/NetworkServer.h
 )
 
 target_include_directories(network_proxy_endtoend PRIVATE
@@ -149,9 +150,11 @@ target_include_directories(network_proxy_endtoend PRIVATE
     ../common/include
 )
 
+# Link same Qt components as unit_tests (server code uses SQL)
 target_link_libraries(network_proxy_endtoend
     Qt6::Network
     Qt6::Test
+    Qt6::Sql
 )
 
 add_test(NAME NetworkProxyEndToEndTests COMMAND network_proxy_endtoend)
