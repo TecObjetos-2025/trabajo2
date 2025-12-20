@@ -21,6 +21,13 @@ set(PROJECT_SOURCES
     src/CoreQtAdapter.cpp
     src/NetworkClientProxy.cpp
     src/NetworkProtocol.h
+    # Logic
+    src/logic/PriceCalculator.cpp
+    src/logic/OrderSorter.cpp
+    src/logic/DtoMapper.cpp
+    # Presenter
+    src/presenter/CajeroPresenter.cpp
+    src/presenter/CocinaPresenter.cpp
 )
 
 add_executable(CafeteriaClient
@@ -33,6 +40,19 @@ target_link_libraries(TestNetworkProxy PRIVATE Qt${QT_VERSION_MAJOR}::Network Qt
 target_link_libraries(CafeteriaClient PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 
 target_link_libraries(CafeteriaClient PRIVATE CafeteriaCommon)
+
+# Unit Tests for Presenter/Logic (No Qt needed for logic, but convenient to have GoogleTest)
+# Since we don't have GTest configured in this file explicitly (it's in root), we can rely on pure C++ tests or integration tests.
+# The user asked for "Test logic without Qt".
+add_executable(TestMVP src/tests/test_presenters_pure.cpp
+    src/logic/PriceCalculator.cpp
+    src/logic/OrderSorter.cpp
+    src/logic/DtoMapper.cpp
+    src/presenter/CajeroPresenter.cpp
+    src/presenter/CocinaPresenter.cpp
+)
+# Note: Presenters depend on ICoreSistema.h which is in CafeteriaCommon.
+target_link_libraries(TestMVP PRIVATE CafeteriaCommon)
 
 # Target helper para ejecutar el cliente con LD_PRELOAD para evitar conflicto con snap
 add_custom_target(run-client

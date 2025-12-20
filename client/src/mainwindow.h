@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <vector>
+#include <memory>
 
 // Inclusión de los DTOs y la interfaz del core
 #include "api/ICoreSistema.h"
@@ -10,6 +11,12 @@
 
 // Clases de implementación del core
 #include "CoreQtAdapter.h" // 'Traductor' de observadores C++ a señales Qt
+
+// Interfaces MVP
+#include "presenter/interfaces/ICajeroView.h"
+#include "presenter/interfaces/ICocinaView.h"
+#include "presenter/CajeroPresenter.h"
+#include "presenter/CocinaPresenter.h"
 
 #include <QListWidgetItem>
 #include <QJsonObject>
@@ -21,20 +28,37 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow, public IObservadorCore
+class MainWindow : public QMainWindow, public IObservadorCore, public ICajeroView, public ICocinaView
 {
     Q_OBJECT
 
     enum ItemDataRoles
     {
         RoleProductoId = Qt::UserRole,
-        RolePrecioUnitario = Qt::UserRole + 1
+        RolePrecioUnitario = Qt::UserRole + 1,
+        RoleProductoNombre = Qt::UserRole + 2
     };
 
 public:
     // Nueva firma del constructor que recibe un puntero crudo al core
     MainWindow(ICoreSistema *core, QWidget *parent = nullptr);
     ~MainWindow();
+
+    // --- ICajeroView Implementation ---
+    void showMenu(const std::vector<ProductViewModel>& products) override;
+    void showCurrentOrder(const std::vector<OrderItemViewModel>& items) override;
+    void updateTotals(const std::string& subtotal, const std::string& igv, const std::string& total) override;
+    void showMessage(const std::string& title, const std::string& msg) override;
+    void showDiscounts(const std::vector<InfoDescuento>& discounts) override;
+    void enableFinalizeButton(bool enable) override;
+    std::string getClientName() override;
+    std::string getSelectedDiscountId() override;
+    void clearForm() override;
+
+    // --- ICocinaView Implementation ---
+    void clearKanbanBoard() override;
+    void addOrderToColumn(const std::string& status, const std::string& cardContent) override;
+    void showKitchenMessage(const std::string& msg) override;
 
 private:
     Ui::MainWindow *ui;
@@ -50,28 +74,11 @@ private:
     // "Traductor" de observadores C++ a señales Qt
     std::shared_ptr<CoreQtAdapter> coreAdapter;
 
-    // Flag para inicializar una sola vez en showEvent
-    bool m_iniciado = false;
+    // MVP Presenters
+    std::unique_ptr<CajeroPresenter> mCajeroPresenter;
+    std::unique_ptr<CocinaPresenter> mCocinaPresenter;
 
     // Métodos auxiliares
-
-    /**
-     * @brief cargarMenuEnUI Carga el menú de productos desde el core hacia la UI.
-     * Vista Cajero.
-     */
-    void cargarMenuEnUI();
-
-    /**
-     * @brief cargarPedidosEnUI Carga la lista de pedidos en cola desde el core hacia la UI.
-     * Vista Cocina.
-     */
-    void cargarPedidosEnUI();
-
-    /**
-     * @brief actualizarTotalesUI Actualiza los totales del pedido actual en la UI.
-     */
-    void actualizarTotalesUI();
-
     /**
      * @brief conectarSenalesYSlots Conecta las señales y slots necesarios entre la UI y el core.
      */
@@ -84,9 +91,6 @@ private slots:
      */
     void on_btnFinalizarPedido_clicked();
 
-    // Slot para enviar el pedido agrupado al servidor
-    void finalizarPedido();
-
     /**
      * @brief on_btnAnadirItem_clicked Slot llamado al hacer clic en el botón "Añadir Ítem".
      */
@@ -96,9 +100,6 @@ private slots:
      * @brief on_btnQuitarItem_clicked Slot llamado al hacer clic en el botón "Quitar Ítem".
      */
     void on_btnQuitarItem_clicked();
-
-    // Slot: agregar producto al pedido al hacer clic en la lista de productos
-    void agregarProductoAlPedido(QListWidgetItem *item);
 
     // Slots "Vista Cocina"
     /**
@@ -125,9 +126,5 @@ private slots:
     void onNuevosPedidosEnCola() override;
     void onPedidoTerminado(int id_pedido) override;
     void onError(const std::string &mensaje) override;
-
-private:
-    // Total acumulado en la orden actual (para actualizar label y habilitar botón)
-    double m_totalActual = 0.0;
 };
 #endif // MainWindow_H
