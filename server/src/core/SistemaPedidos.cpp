@@ -176,7 +176,6 @@ void SistemaPedidos::registrarObservador(std::shared_ptr<IObservadorCore> observ
             });
         if (it != observadores.end())
         {
-            observadores.push_back(observador);
             std::cout << "[SISTEMA] Observador ya registrado, omitiendo..." << std::endl;
             return;
         }
