@@ -37,6 +37,13 @@ signals:
     // Emitido cuando llega una respuesta JSON completa (a cualquier petición)
     void respuestaRecibida(const QJsonObject &obj);
 
+    // Señal para informar errores de conexión u otros errores de socket
+    void errorOcurrido(const QString &mensaje);
+
+public slots:
+    // Intenta conectar al host/puerto provistos y emite errorOcurrido en caso de fallo
+    void conectar(const QString &host_, quint16 port_);
+
 private slots:
     // Slot asíncrono que procesa datos entrantes del socket y extrae mensajes framed
     void onDatosRecibidos();

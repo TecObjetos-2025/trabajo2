@@ -8,6 +8,9 @@ file(GLOB TEST_SOURCES
     "test_*.cpp"
 )
 
+# Excluir testes Qt (se compilan por separado en network_proxy_tests)
+list(REMOVE_ITEM TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_network_proxy_async.cpp)
+
 file(GLOB DBMANAGER_SRC "../server/src/db/DatabaseManager.cpp")
 
 # Archivos del servidor necesarios para las pruebas
@@ -36,6 +39,8 @@ set(SERVER_SOURCES
     ../server/src/patterns/DescuentoPorcentaje.cpp 
     ../server/src/repositories/ProductRepository.cpp
     ../server/src/repositories/PedidoRepository.cpp
+    # Incluir el proxy cliente para pruebas que lo requieren
+    ../client/src/NetworkClientProxy.cpp
 )
 
 add_executable(unit_tests

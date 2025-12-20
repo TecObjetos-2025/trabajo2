@@ -21,12 +21,25 @@ NetworkClientProxy::NetworkClientProxy(const QString &host_, quint16 port_)
     socket->connectToHost(host, port);
     if (!socket->waitForConnected(2000))
     {
-        qWarning() << "NetworkClientProxy: no se pudo conectar a" << host << port;
+        QString msg = QString("NetworkClientProxy: no se pudo conectar a %1:%2").arg(host).arg(port);
+        qWarning() << msg;
+        emit errorOcurrido(msg);
     }
     else
     {
         qDebug() << "NetworkClientProxy: conectado a" << host << port;
     }
+
+    // Conectar la señal errorOccurred del socket para retransmitirla hacia el UI
+    connect(socket, &QTcpSocket::errorOccurred, this, [this](QAbstractSocket::SocketError socketError) {
+        Q_UNUSED(socketError);
+        if (socket)
+        {
+            QString mensaje = socket->errorString();
+            qWarning() << "NetworkClientProxy: socket error:" << mensaje;
+            emit errorOcurrido(mensaje);
+        }
+    });
 }
 
 NetworkClientProxy::~NetworkClientProxy()
@@ -37,6 +50,39 @@ NetworkClientProxy::~NetworkClientProxy()
         socket->deleteLater();
         socket = nullptr;
     }
+}
+
+void NetworkClientProxy::conectar(const QString &host_, quint16 port_)
+{
+    host = host_;
+    port = port_;
+
+    if (!socket)
+        socket = new QTcpSocket(this);
+
+    socket->connectToHost(host, port);
+    if (!socket->waitForConnected(2000))
+    {
+        QString msg = QString("NetworkClientProxy: no se pudo conectar a %1:%2").arg(host).arg(port);
+        qWarning() << msg;
+        emit errorOcurrido(msg);
+        return;
+    }
+    else
+    {
+        qDebug() << "NetworkClientProxy: conectado a" << host << port;
+    }
+
+    // Conectar la señal errorOccurred del socket para retransmitirla hacia el UI
+    connect(socket, &QTcpSocket::errorOccurred, this, [this](QAbstractSocket::SocketError socketError) {
+        Q_UNUSED(socketError);
+        if (socket)
+        {
+            QString mensaje = socket->errorString();
+            qWarning() << "NetworkClientProxy: socket error:" << mensaje;
+            emit errorOcurrido(mensaje);
+        }
+    });
 }
 
 void NetworkClientProxy::registrarObservador(std::shared_ptr<IObservadorCore> obs)
