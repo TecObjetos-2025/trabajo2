@@ -31,15 +31,15 @@ NetworkClientProxy::NetworkClientProxy(const QString &host_, quint16 port_)
     }
 
     // Conectar la señal errorOccurred del socket para retransmitirla hacia el UI
-    connect(socket, &QTcpSocket::errorOccurred, this, [this](QAbstractSocket::SocketError socketError) {
+    connect(socket, &QTcpSocket::errorOccurred, this, [this](QAbstractSocket::SocketError socketError)
+            {
         Q_UNUSED(socketError);
         if (socket)
         {
             QString mensaje = socket->errorString();
             qWarning() << "NetworkClientProxy: socket error:" << mensaje;
             emit errorOcurrido(mensaje);
-        }
-    });
+        } });
 }
 
 NetworkClientProxy::~NetworkClientProxy()
@@ -74,15 +74,15 @@ void NetworkClientProxy::conectar(const QString &host_, quint16 port_)
     }
 
     // Conectar la señal errorOccurred del socket para retransmitirla hacia el UI
-    connect(socket, &QTcpSocket::errorOccurred, this, [this](QAbstractSocket::SocketError socketError) {
+    connect(socket, &QTcpSocket::errorOccurred, this, [this](QAbstractSocket::SocketError socketError)
+            {
         Q_UNUSED(socketError);
         if (socket)
         {
             QString mensaje = socket->errorString();
             qWarning() << "NetworkClientProxy: socket error:" << mensaje;
             emit errorOcurrido(mensaje);
-        }
-    });
+        } });
 }
 
 void NetworkClientProxy::registrarObservador(std::shared_ptr<IObservadorCore> obs)
