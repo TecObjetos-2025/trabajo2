@@ -64,3 +64,23 @@ target_link_libraries(unit_tests
 )
 
 gtest_discover_tests(unit_tests)
+
+# ------------------------------------------------------------------
+# Tests for NetworkClientProxy (Qt Test based)
+# ------------------------------------------------------------------
+add_executable(network_proxy_tests
+    test_network_proxy_async.cpp
+    ../client/src/NetworkClientProxy.cpp
+)
+
+target_include_directories(network_proxy_tests PRIVATE
+    ../client/src
+    ../common/include
+)
+
+target_link_libraries(network_proxy_tests
+    Qt6::Network
+    Qt6::Test
+)
+
+add_test(NAME NetworkProxyAsyncTests COMMAND network_proxy_tests)
