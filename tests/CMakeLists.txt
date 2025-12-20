@@ -39,6 +39,7 @@ set(SERVER_SOURCES
     ../server/src/patterns/DescuentoPorcentaje.cpp 
     ../server/src/repositories/ProductRepository.cpp
     ../server/src/repositories/PedidoRepository.cpp
+    ../server/src/repositories/ClienteRepository.cpp
     # Incluir el proxy cliente para pruebas que lo requieren
     ../client/src/NetworkClientProxy.cpp
 )
