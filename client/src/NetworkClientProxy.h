@@ -52,6 +52,9 @@ private:
     // Cola de respuestas JSON recibidas
     QQueue<QJsonObject> colaRespuestas;
 
+    // Observador (UI) que será notificado de eventos push (ej: EVT_NEW_ORDER)
+    std::shared_ptr<IObservadorCore> observador = nullptr;
+
     // Enviar una petición y esperar la respuesta (bloqueante)
     QJsonObject enviarRequestYEsperarRespuesta(const QString &cmd, const QJsonObject &payload, int timeoutMs = 3000);
 };

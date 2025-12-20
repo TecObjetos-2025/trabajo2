@@ -39,14 +39,23 @@ NetworkClientProxy::~NetworkClientProxy()
     }
 }
 
-void NetworkClientProxy::registrarObservador(std::shared_ptr<IObservadorCore> /*observador*/)
+void NetworkClientProxy::registrarObservador(std::shared_ptr<IObservadorCore> obs)
 {
-    // No-op: observadores serán gestionados por la UI localmente o vía push events en fases posteriores
+    observador = obs;
+    qDebug() << "NetworkClientProxy::registrarObservador - observador registrado";
 }
 
-void NetworkClientProxy::removerObservador(IObservadorCore * /*observador*/)
+void NetworkClientProxy::removerObservador(IObservadorCore *obs)
 {
-    // No-op
+    if (observador && observador.get() == obs)
+    {
+        observador.reset();
+        qDebug() << "NetworkClientProxy::removerObservador - observador removido";
+    }
+    else
+    {
+        qDebug() << "NetworkClientProxy::removerObservador - no coincide con observador registrado";
+    }
 }
 
 QJsonObject NetworkClientProxy::enviarRequestYEsperarRespuesta(const QString &cmd, const QJsonObject &payload, int timeoutMs)
@@ -213,7 +222,38 @@ void NetworkClientProxy::onDatosRecibidos()
         QJsonObject obj = doc.object();
         qDebug() << "NetworkClientProxy: parsed response:" << QJsonDocument(obj).toJson(QJsonDocument::Compact);
 
-        // Encolar y notificar
+        // Discriminación: eventos vs respuestas
+        if (obj.contains(Protocolo::KEY_CMD) && obj.value(Protocolo::KEY_CMD).isString())
+        {
+            QString cmd = obj.value(Protocolo::KEY_CMD).toString();
+            if (cmd == Protocolo::EVT_NEW_ORDER)
+            {
+                qDebug() << "NetworkClientProxy: recibido evento EVT_NEW_ORDER";
+                if (observador)
+                {
+                    qDebug() << "NetworkClientProxy: notificando observador onNuevosPedidosEnCola";
+                    observador->onNuevosPedidosEnCola();
+                }
+                else
+                {
+                    qDebug() << "NetworkClientProxy: sin observador registrado para EVT_NEW_ORDER";
+                }
+                // No encolamos ni emitimos respuestaRecibida: es un evento push
+                continue;
+            }
+        }
+
+        // Si contiene status, se asume que es respuesta a un comando
+        if (obj.contains(Protocolo::KEY_STATUS))
+        {
+            qDebug() << "NetworkClientProxy: recibido response (status) - encolando y emitiendo señal";
+            colaRespuestas.enqueue(obj);
+            emit respuestaRecibida(obj);
+            continue;
+        }
+
+        // Si no es ni evento ni respuesta conocida, loguear y encolar por compatibilidad
+        qDebug() << "NetworkClientProxy: mensaje desconocido recibido, encolando por compatibilidad";
         colaRespuestas.enqueue(obj);
         emit respuestaRecibida(obj);
     }
