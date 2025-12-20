@@ -19,7 +19,10 @@ int main(int argc, char *argv[])
     SistemaPedidos sistema(productRepository, pedidoRepository);
 
     // Crear y arrancar servidor de red (usa el subsistema de pedidos)
-    NetworkServer servidor(&sistema);
+    // El servidor se registra como observador para recibir eventos del sistema
+    auto servidorPtr = std::make_shared<NetworkServer>(&sistema);
+    sistema.registrarObservador(servidorPtr);
+    // Nota: NetworkServer se mantiene en memoria a lo largo de la app
 
     // Mantener la app viva
     return app.exec();

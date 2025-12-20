@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <QString>
+#include "../../common/include/api/IObservadorCore.h"
 
 class IComandoServidor;
 class SistemaPedidos;
@@ -16,7 +17,7 @@ class SistemaPedidos;
  * Además de escuchar, mantiene la lista de clientes conectados y despacha
  * mensajes entrantes a las implementaciones de `IComandoServidor`.
  */
-class NetworkServer : public QTcpServer
+class NetworkServer : public QTcpServer, public IObservadorCore
 {
     Q_OBJECT
 
@@ -48,6 +49,15 @@ private:
 
     // Remover cliente (llamado en slot disconnected)
     void removerCliente(QTcpSocket *socket);
+
+public:
+    // Difundir un evento JSON (formato string con JSON) a todos los clientes conectados
+    void difundirEvento(const std::string &jsonEvento);
+
+    // IObservadorCore methods
+    void onNuevosPedidosEnCola() override;
+    void onPedidoTerminado(int id_pedido) override {}
+    void onError(const std::string &mensaje) override {}
 
 public:
     // Accesor usado en tests TDD

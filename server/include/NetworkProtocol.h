@@ -26,8 +26,11 @@ namespace NetworkProtocol
 
         if (socket->isOpen())
         {
+            qDebug() << "NetworkProtocol::sendJson - writing" << out.size() << "bytes to" << socket;
             socket->write(out);
             socket->flush();
+            // Asegurar que bytes lleguen al stack de escritura
+            socket->waitForBytesWritten(200);
         }
     }
 
