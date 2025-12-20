@@ -39,30 +39,22 @@ MainWindow::MainWindow(ICoreSistema *core, QWidget *parent)
     // Conectar señales y slots
     conectarSenalesYSlots();
 
-    // Conectar click en lista de productos a slot que agrega al pedido
-    connect(ui->listaMenuProductos, &QListWidget::itemClicked, this, &MainWindow::agregarProductoAlPedido);
-
     // Inicializar estado del total y del botón
     m_totalActual = 0.0;
     ui->lblTotal->setText(QString("$ %1").arg(m_totalActual, 0, 'f', 2));
+    ui->lblSubtotal->setText(QString("$ %1").arg(0.0, 0, 'f', 2));
+    ui->lblIGV->setText(QString("$ %1").arg(0.0, 0, 'f', 2));
     ui->btnFinalizarPedido->setEnabled(false);
 
-    // Conectar el botón Finalizar a nuestro nuevo slot finalizarPedido
-    connect(ui->btnFinalizarPedido, &QPushButton::clicked, this, &MainWindow::finalizarPedido);
+    // NOTE: No conectar itemClicked -> usamos solo botones btnAnadirItem/btnQuitarItem
 
-    // Conectar la señal del proxy (si existe) para procesar respuestas
-    if (m_core)
-    {
-        QObject *obj = dynamic_cast<QObject *>(m_core);
-        if (obj)
-        {
-            connect(obj, SIGNAL(respuestaRecibida(QJsonObject)), this, SLOT(procesarRespuesta(QJsonObject)));
-        }
-    }
+    // El botón 'Finalizar' se conecta automáticamente por Qt a on_btnFinalizarPedido_clicked()
+    // Evitar conexión manual doble que causaba ejecuciones duplicadas
 
     // Cargar datos iniciales en la UI (si hay core)
     if (coreSistema)
     {
+        // Cargar sin que el slot procesarRespuesta intercepte la respuesta síncrona (evita duplicados)
         cargarMenuEnUI();
         cargarPedidosEnUI();
 
@@ -84,6 +76,7 @@ MainWindow::MainWindow(ICoreSistema *core, QWidget *parent)
         if (obj)
         {
             // Usamos Qt::DirectConnection ya que todo corre en el mismo hilo por ahora
+            // Nota: conectar DESPUÉS de cargar el menú evita que la respuesta síncrona cause duplicados
             connect(obj, SIGNAL(respuestaRecibida(QJsonObject)), this, SLOT(procesarRespuesta(QJsonObject)), Qt::DirectConnection);
             connect(obj, SIGNAL(errorOcurrido(QString)), this, SLOT(onCoreError(QString)), Qt::QueuedConnection);
         }
@@ -125,12 +118,13 @@ void MainWindow::cargarMenuEnUI()
     auto menu = coreSistema->getMenu();
     for (const auto &producto : menu)
     {
-        QString itemText = QString("%1 - %2 (S/%3)")
-                               .arg(producto.id)
+        // Mostrar consistentemente: "Nombre - S/ 5.00"
+        QString itemText = QString("%1 - S/ %2")
                                .arg(QString::fromStdString(producto.nombre))
                                .arg(producto.precio, 0, 'f', 2);
         QListWidgetItem *item = new QListWidgetItem(itemText);
-        item->setData(Qt::UserRole, producto.id); // Almacenar el ID del producto
+        item->setData(Qt::UserRole, producto.id);         // Almacenar el ID del producto
+        item->setData(Qt::UserRole + 1, producto.precio); // Guardar precio también
         ui->listaMenuProductos->addItem(item);
     }
 }
@@ -188,17 +182,25 @@ void MainWindow::actualizarTotalesUI()
         subtotal += precio;
     }
 
-    double tasaIGV = coreSistema->getPorcentajeIGV();
+    double tasaIGV = 0.0;
+    if (coreSistema)
+        tasaIGV = coreSistema->getPorcentajeIGV();
 
     double montoIGV = subtotal * tasaIGV;
     double total = subtotal + montoIGV;
 
-    // Actualizacion visual
-    ui->lblSubtotal->setText(QString("S/ %1").arg(subtotal, 0, 'f', 2));
-    ui->lblIGV->setText(QString("S/ %1").arg(montoIGV, 0, 'f', 2));
+    // Actualizacion visual (usar mismo formato dólar para consistencia)
+    ui->lblSubtotal->setText(QString("$ %1").arg(subtotal, 0, 'f', 2));
+    ui->lblIGV->setText(QString("$ %1").arg(montoIGV, 0, 'f', 2));
 
     // Total en negrita
-    ui->lblTotal->setText(QString("S/ %1").arg(total, 0, 'f', 2));
+    ui->lblTotal->setText(QString("$ %1").arg(total, 0, 'f', 2));
+
+    // Actualizar miembro
+    m_totalActual = total;
+
+    // Habilitar/deshabilitar el botón
+    ui->btnFinalizarPedido->setEnabled(m_totalActual > 0.0);
 }
 
 // --- Slots de la UI
@@ -233,11 +235,10 @@ void MainWindow::agregarProductoAlPedido(QListWidgetItem *item)
 
     ui->listaOrdenActual->addItem(newItem);
 
-    // Actualizar total
-    m_totalActual += precio;
-    ui->lblTotal->setText(QString("$ %1").arg(m_totalActual, 0, 'f', 2));
+    // Recalcular totales usando la función centralizada
+    actualizarTotalesUI();
 
-    // Habilitar botón de finalizar si el total > 0
+    // Habilitar botón de finalizar si subtotal > 0
     ui->btnFinalizarPedido->setEnabled(m_totalActual > 0.0);
 }
 

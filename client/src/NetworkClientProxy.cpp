@@ -18,16 +18,10 @@ NetworkClientProxy::NetworkClientProxy(const QString &host_, quint16 port_)
     socket = new QTcpSocket(this);
     connect(socket, &QTcpSocket::readyRead, this, &NetworkClientProxy::onDatosRecibidos);
 
-    socket->connectToHost(host, port);
-    if (!socket->waitForConnected(2000))
+    // Si se proporcionaron host/port válidos en el constructor, intentar conexión
+    if (!host_.isEmpty() && port_ != 0)
     {
-        QString msg = QString("NetworkClientProxy: no se pudo conectar a %1:%2").arg(host).arg(port);
-        qWarning() << msg;
-        emit errorOcurrido(msg);
-    }
-    else
-    {
-        qDebug() << "NetworkClientProxy: conectado a" << host << port;
+        conectar(host_, port_);
     }
 
     // Conectar la señal errorOccurred del socket para retransmitirla hacia el UI
@@ -59,6 +53,13 @@ void NetworkClientProxy::conectar(const QString &host_, quint16 port_)
 
     if (!socket)
         socket = new QTcpSocket(this);
+
+    // Evitar reconexiones si ya estamos conectando/conectados
+    if (socket->state() == QAbstractSocket::ConnectingState || socket->state() == QAbstractSocket::ConnectedState)
+    {
+        qDebug() << "NetworkClientProxy::conectar - ya en estado" << socket->state() << ", omitiendo";
+        return;
+    }
 
     socket->connectToHost(host, port);
     if (!socket->waitForConnected(2000))

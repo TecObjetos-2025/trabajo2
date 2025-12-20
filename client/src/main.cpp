@@ -178,8 +178,8 @@ int main(int argc, char *argv[])
             background-color: #0fce4d;
         }
     )");
-    // Crear NetworkClientProxy, conectar señales y pasar al MainWindow
-    NetworkClientProxy *proxy = new NetworkClientProxy();
+    // Crear NetworkClientProxy sin auto-conectar (evitar doble intento)
+    NetworkClientProxy *proxy = new NetworkClientProxy(QStringLiteral(""), 0);
 
     QObject::connect(proxy, &NetworkClientProxy::errorOcurrido, [](const QString &msg)
                      { QMessageBox::critical(nullptr, "Error de Conexión", msg); });
