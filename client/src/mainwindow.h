@@ -11,6 +11,9 @@
 // Clases de implementación del core
 #include "CoreQtAdapter.h" // 'Traductor' de observadores C++ a señales Qt
 
+#include <QListWidgetItem>
+#include <QJsonObject>
+
 QT_BEGIN_NAMESPACE
 namespace Ui
 {
@@ -91,6 +94,9 @@ private slots:
      */
     void on_btnQuitarItem_clicked();
 
+    // Slot: agregar producto al pedido al hacer clic en la lista de productos
+    void agregarProductoAlPedido(QListWidgetItem *item);
+
     // Slots "Vista Cocina"
     /**
      * @brief Se activa cuando el cocinero presiona "Procesar Siguiente Pedido".
@@ -116,5 +122,9 @@ private slots:
     void onNuevosPedidosEnCola() override;
     void onPedidoTerminado(int id_pedido) override;
     void onError(const std::string &mensaje) override;
+
+private:
+    // Total acumulado en la orden actual (para actualizar label y habilitar botón)
+    double m_totalActual = 0.0;
 };
 #endif // MainWindow_H

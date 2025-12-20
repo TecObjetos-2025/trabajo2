@@ -6,6 +6,8 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <QJsonDocument>
+#include <QJsonArray>
+#include "../../common/include/api/Protocolo.h"
 
 MainWindow::MainWindow(ICoreSistema *core, QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow), m_core(core)
@@ -36,6 +38,24 @@ MainWindow::MainWindow(ICoreSistema *core, QWidget *parent)
 
     // Conectar señales y slots
     conectarSenalesYSlots();
+
+    // Conectar click en lista de productos a slot que agrega al pedido
+    connect(ui->listaMenuProductos, &QListWidget::itemClicked, this, &MainWindow::agregarProductoAlPedido);
+
+    // Inicializar estado del total y del botón
+    m_totalActual = 0.0;
+    ui->lblTotal->setText(QString("$ %1").arg(m_totalActual, 0, 'f', 2));
+    ui->btnFinalizarPedido->setEnabled(false);
+
+    // Conectar la señal del proxy (si existe) para procesar respuestas
+    if (m_core)
+    {
+        QObject *obj = dynamic_cast<QObject *>(m_core);
+        if (obj)
+        {
+            connect(obj, SIGNAL(respuestaRecibida(QJsonObject)), this, SLOT(procesarRespuesta(QJsonObject)));
+        }
+    }
 
     // Cargar datos iniciales en la UI (si hay core)
     if (coreSistema)
@@ -183,35 +203,39 @@ void MainWindow::actualizarTotalesUI()
 // Vista Cajero
 void MainWindow::on_btnAnadirItem_clicked()
 {
-    // Obtener item seleccionado
+    // Reuse agregarProductoAlPedido if an item is selected
     QListWidgetItem *itemSeleccionado = ui->listaMenuProductos->currentItem();
     if (!itemSeleccionado)
     {
         onCoreError("Por favor, seleccione un producto del menú.");
         return;
     }
+    agregarProductoAlPedido(itemSeleccionado);
+}
 
-    int id = itemSeleccionado->data(Qt::UserRole).toInt();
+void MainWindow::agregarProductoAlPedido(QListWidgetItem *item)
+{
+    if (!item)
+        return;
 
-    // Recuperar precio, forma sucia (puede mejorarse)
-    QString texto = itemSeleccionado->text();
-    int posMoneda = texto.lastIndexOf("S/");
-    int posFin = texto.lastIndexOf(")");
-    // qDebug() << "Posicion de S/: " << posMoneda;
-    // qDebug() << "Texto a partir de Posicion " << texto.mid(posMoneda);
-    double precio = texto.mid(posMoneda + 2, posFin - posMoneda - 2).toDouble();
+    int id = item->data(Qt::UserRole).toInt();
+    double precio = item->data(Qt::UserRole + 1).toDouble();
+    QString nombre = item->text();
 
-    qDebug() << "[MainWindow] Añadiendo ítem al pedido actual: ID =" << id << ", Precio =" << precio;
-
-    // Crear el item visual
-    QListWidgetItem *newItem = new QListWidgetItem(itemSeleccionado->text());
+    // Crear la representación en la lista del pedido
+    QString texto = QString("1x %1").arg(nombre);
+    QListWidgetItem *newItem = new QListWidgetItem(texto);
     newItem->setData(Qt::UserRole, id);
-    newItem->setData(Qt::UserRole + 1, precio); // Guardar precio
+    newItem->setData(Qt::UserRole + 1, precio);
 
-    // Anadir al pedido actual
     ui->listaOrdenActual->addItem(newItem);
-    qDebug() << "[MainWindow] Ítem añadido al pedido actual.";
-    actualizarTotalesUI();
+
+    // Actualizar total
+    m_totalActual += precio;
+    ui->lblTotal->setText(QString("$ %1").arg(m_totalActual, 0, 'f', 2));
+
+    // Habilitar botón de finalizar si el total > 0
+    ui->btnFinalizarPedido->setEnabled(m_totalActual > 0.0);
 }
 
 void MainWindow::on_btnQuitarItem_clicked()
@@ -303,17 +327,42 @@ void MainWindow::onCoreError(QString mensaje)
 void MainWindow::procesarRespuesta(const QJsonObject &obj)
 {
     qDebug() << "MainWindow::procesarRespuesta - recibida respuesta:" << QJsonDocument(obj).toJson(QJsonDocument::Compact);
-    // Por ahora simplemente refrescamos el menú invocando al core (manteniendo compatibilidad)
-    if (m_core)
+
+    // Verificamos si el objeto contiene la clave 'productos' (respuesta de GET_MENU)
+    QJsonArray productos;
+    if (obj.contains("productos") && obj.value("productos").isArray())
     {
-        try
-        {
-            cargarMenuEnUI();
-        }
-        catch (...)
-        {
-            qWarning() << "MainWindow::procesarRespuesta - error al actualizar UI";
-        }
+        productos = obj.value("productos").toArray();
+    }
+    else if (obj.contains(Protocolo::KEY_DATA) && obj.value(Protocolo::KEY_DATA).isArray())
+    {
+        // Compatibilidad: algunos responses usan 'data' con un array de productos
+        productos = obj.value(Protocolo::KEY_DATA).toArray();
+    }
+    else
+    {
+        qDebug() << "MainWindow::procesarRespuesta - no es una respuesta de productos, ignorando";
+        return; // No es respuesta GET_MENU
+    }
+
+    // Llenar la lista de productos en la UI
+    ui->listaMenuProductos->clear();
+
+    for (const QJsonValue &v : productos)
+    {
+        if (!v.isObject())
+            continue;
+        QJsonObject p = v.toObject();
+        int id = p.contains("id") ? p.value("id").toInt() : -1;
+        QString nombre = p.contains("nombre") ? p.value("nombre").toString() : QString("Producto");
+        double precio = p.contains("precio") ? p.value("precio").toDouble() : 0.0;
+
+        QString texto = QString("%1 - S/ %2").arg(nombre).arg(precio, 0, 'f', 2);
+        QListWidgetItem *item = new QListWidgetItem(texto);
+        item->setData(Qt::UserRole, id);
+        // Guardar el precio también en UserRole+1 para uso posterior
+        item->setData(Qt::UserRole + 1, precio);
+        ui->listaMenuProductos->addItem(item);
     }
 }
 
