@@ -7,6 +7,7 @@
 #include <QHostAddress>
 #include <QTimer>
 #include <QDebug>
+#include <QThread>
 
 #include "../../common/include/api/Protocolo.h"
 
@@ -126,38 +127,71 @@ QJsonObject NetworkClientProxy::enviarRequestYEsperarRespuesta(const QString &cm
         throw std::runtime_error("No conectado al servidor");
     }
 
-    // Si existe una respuesta en la cola, se devuelve inmediatamente
-    if (!colaRespuestas.isEmpty())
+    // Helper: decidir si una respuesta corresponde al comando pedido
+    auto responseMatchesCmd = [cmd](const QJsonObject &r)
     {
-        QJsonObject r = colaRespuestas.dequeue();
-        return r;
+        // Para GET_MENU y GET_ORDERS esperamos un 'data' con un array
+        if (cmd == Protocolo::CMD_GET_MENU || cmd == Protocolo::CMD_GET_ORDERS)
+        {
+            return r.contains(Protocolo::KEY_DATA) && r.value(Protocolo::KEY_DATA).isArray();
+        }
+        // Para otros comandos aceptamos una respuesta con status (OK/ERROR)
+        return r.contains(Protocolo::KEY_STATUS);
+    };
+
+    // Si existe una respuesta en la cola que empañe con el comando, devolverla (no consumir respuestas de otros comandos)
+    for (int i = 0; i < colaRespuestas.size(); ++i)
+    {
+        QJsonObject cand = colaRespuestas.at(i);
+        if (responseMatchesCmd(cand))
+        {
+            qDebug() << "NetworkClientProxy::enviarRequestYEsperarRespuesta - found queued matching response for cmd" << cmd;
+            colaRespuestas.removeAt(i);
+            return cand;
+        }
     }
 
     QEventLoop loop;
     QTimer timeoutTimer;
     timeoutTimer.setSingleShot(true);
 
-    // Cuando llegue una respuesta, salimos del loop
+    // Cuando llegue una respuesta, comprobamos si corresponde y salimos del loop
     QMetaObject::Connection conn = connect(this, &NetworkClientProxy::respuestaRecibida, this, [&]()
                                            {
-        if (!colaRespuestas.isEmpty())
-            loop.quit(); });
+        for (int i = 0; i < colaRespuestas.size(); ++i)
+        {
+            QJsonObject cand = colaRespuestas.at(i);
+            if (responseMatchesCmd(cand))
+            {
+                qDebug() << "NetworkClientProxy::enviarRequestYEsperarRespuesta - respuesta recibida y coincide con cmd" << cmd;
+                loop.quit();
+                return;
+            }
+        }
+        // Si no hay coincidencias aún, seguimos esperando
+        qDebug() << "NetworkClientProxy::enviarRequestYEsperarRespuesta - respuesta recibida pero no coincide con cmd" << cmd; });
 
     QObject::connect(&timeoutTimer, &QTimer::timeout, &loop, &QEventLoop::quit);
     timeoutTimer.start(timeoutMs);
 
-    // Si no hay respuestas aún, entra al loop a esperar
     if (colaRespuestas.isEmpty())
         loop.exec();
 
     disconnect(conn);
 
-    if (colaRespuestas.isEmpty())
+    // Buscar nuevamente la respuesta coincidente (puede haber llegado mientras esperábamos)
+    for (int i = 0; i < colaRespuestas.size(); ++i)
     {
-        throw std::runtime_error("Timeout esperando respuesta JSON");
+        QJsonObject cand = colaRespuestas.at(i);
+        if (responseMatchesCmd(cand))
+        {
+            qDebug() << "NetworkClientProxy::enviarRequestYEsperarRespuesta - returning matching response after wait for cmd" << cmd;
+            colaRespuestas.removeAt(i);
+            return cand;
+        }
     }
 
-    return colaRespuestas.dequeue();
+    throw std::runtime_error("Timeout esperando respuesta JSON");
 }
 
 std::vector<InfoProducto> NetworkClientProxy::getMenu()
@@ -278,8 +312,14 @@ void NetworkClientProxy::onDatosRecibidos()
                 qDebug() << "NetworkClientProxy: recibido evento EVT_NEW_ORDER" << QJsonDocument(obj).toJson(QJsonDocument::Compact);
                 if (observador)
                 {
-                    qDebug() << "NetworkClientProxy: observador presente:" << observador.get() << "use_count=" << observador.use_count() << " - notificando onNuevosPedidosEnCola";
-                    observador->onNuevosPedidosEnCola();
+                    // Evitar llamadas reentrantes directas en el contexto del socket
+                    qDebug() << "NetworkClientProxy: observador presente:" << observador.get() << "use_count=" << observador.use_count() << " - programando notificación deferred";
+                    // Capturar shared_ptr para mantenerlo vivo hasta la notificación
+                    auto obsCopy = observador;
+                    QTimer::singleShot(50, this, [obsCopy]()
+                                       {
+                        if (obsCopy)
+                            obsCopy->onNuevosPedidosEnCola(); });
                 }
                 else
                 {
@@ -375,7 +415,18 @@ std::vector<InfoPedido> NetworkClientProxy::getPedidosActivos()
     QJsonObject resp;
     try
     {
-        resp = enviarRequestYEsperarRespuesta(Protocolo::CMD_GET_ORDERS, payload);
+        // Intentar con timeout ampliado y retry
+        const int initialTimeoutMs = 5000;
+        try
+        {
+            resp = enviarRequestYEsperarRespuesta(Protocolo::CMD_GET_ORDERS, payload, initialTimeoutMs);
+        }
+        catch (const std::exception &ex)
+        {
+            qWarning() << "NetworkClientProxy::getPedidosActivos - error al solicitar pedidos (primer intento):" << ex.what() << " - reintentando";
+            QThread::msleep(50);
+            resp = enviarRequestYEsperarRespuesta(Protocolo::CMD_GET_ORDERS, payload, initialTimeoutMs);
+        }
     }
     catch (const std::exception &ex)
     {

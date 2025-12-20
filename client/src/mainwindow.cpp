@@ -394,8 +394,28 @@ void MainWindow::procesarRespuesta(const QJsonObject &obj)
     }
     else if (obj.contains(Protocolo::KEY_DATA) && obj.value(Protocolo::KEY_DATA).isArray())
     {
-        // Compatibilidad: algunos responses usan 'data' con un array de productos
-        productos = obj.value(Protocolo::KEY_DATA).toArray();
+        // Compatibilidad: algunos responses usan 'data' con un array. Pero ojo: ese 'data' puede
+        // contener pedidos (GET_ORDERS) o productos (GET_MENU). Debemos detectar si realmente
+        // se trata de productos (id/nombre/precio) para no reemplazar el menú con pedidos.
+        QJsonArray arr = obj.value(Protocolo::KEY_DATA).toArray();
+        if (!arr.isEmpty() && arr.at(0).isObject())
+        {
+            QJsonObject first = arr.at(0).toObject();
+            if (first.contains("id") && first.contains("nombre") && first.contains("precio"))
+            {
+                productos = arr;
+            }
+            else
+            {
+                qDebug() << "MainWindow::procesarRespuesta - KEY_DATA recibido pero no parecen ser productos, ignorando para menu";
+                return; // No es respuesta GET_MENU
+            }
+        }
+        else
+        {
+            qDebug() << "MainWindow::procesarRespuesta - KEY_DATA vacío o no es object, ignorando";
+            return;
+        }
     }
     else
     {
