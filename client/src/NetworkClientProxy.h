@@ -2,14 +2,19 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QQueue>
+#include <QByteArray>
+#include <QEventLoop>
 #include <vector>
 #include <memory>
 #include <stdexcept>
 
 #include "../../common/include/api/ICoreSistema.h"
 
-class NetworkClientProxy : public ICoreSistema
+class NetworkClientProxy : public QObject, public ICoreSistema
 {
+    Q_OBJECT
+
 public:
     explicit NetworkClientProxy(const QString &host = QStringLiteral("127.0.0.1"), quint16 port = 1234);
     ~NetworkClientProxy() override;
@@ -28,11 +33,25 @@ public:
     std::vector<InfoPedido> getPedidosActivos() override;
     void procesarSiguientePedido() override;
 
+signals:
+    // Emitido cuando llega una respuesta JSON completa (a cualquier petición)
+    void respuestaRecibida(const QJsonObject &obj);
+
+private slots:
+    // Slot asíncrono que procesa datos entrantes del socket y extrae mensajes framed
+    void onDatosRecibidos();
+
 private:
     QTcpSocket *socket = nullptr;
     QString host;
     quint16 port = 0;
 
-    // Helper: send request and wait for a single framed JSON response
+    // Buffer para datos parciales recibidos
+    QByteArray bufferAcumulado;
+
+    // Cola de respuestas JSON recibidas
+    QQueue<QJsonObject> colaRespuestas;
+
+    // Enviar una petición y esperar la respuesta (bloqueante)
     QJsonObject enviarRequestYEsperarRespuesta(const QString &cmd, const QJsonObject &payload, int timeoutMs = 3000);
 };

@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QDataStream>
 #include <QHostAddress>
+#include <QTimer>
 #include <QDebug>
 
 #include "../../common/include/api/Protocolo.h"
@@ -12,13 +13,19 @@
 #include "NetworkProtocol.h"
 
 NetworkClientProxy::NetworkClientProxy(const QString &host_, quint16 port_)
-    : host(host_), port(port_)
+    : QObject(nullptr), host(host_), port(port_)
 {
-    socket = new QTcpSocket();
+    socket = new QTcpSocket(this);
+    connect(socket, &QTcpSocket::readyRead, this, &NetworkClientProxy::onDatosRecibidos);
+
     socket->connectToHost(host, port);
     if (!socket->waitForConnected(2000))
     {
         qWarning() << "NetworkClientProxy: no se pudo conectar a" << host << port;
+    }
+    else
+    {
+        qDebug() << "NetworkClientProxy: conectado a" << host << port;
     }
 }
 
@@ -28,6 +35,7 @@ NetworkClientProxy::~NetworkClientProxy()
     {
         socket->disconnectFromHost();
         socket->deleteLater();
+        socket = nullptr;
     }
 }
 
@@ -56,65 +64,44 @@ QJsonObject NetworkClientProxy::enviarRequestYEsperarRespuesta(const QString &cm
     // Enviar
     NetworkProtocol::sendJson(socket, req);
 
-    // Leer cabecera (4 bytes big-endian)
-    QByteArray hdr;
-    int waited = 0;
-    while (hdr.size() < static_cast<int>(sizeof(quint32)) && waited < timeoutMs)
+    // Espera asíncrona de respuesta
+    if (!socket || socket->state() != QAbstractSocket::ConnectedState)
     {
-        if (!socket->waitForReadyRead(100))
-        {
-            waited += 100;
-            continue;
-        }
-        hdr.append(socket->read(static_cast<int>(sizeof(quint32)) - hdr.size()));
-    }
-    if (hdr.size() < static_cast<int>(sizeof(quint32)))
-    {
-        throw std::runtime_error("Timeout esperando cabecera de respuesta");
+        throw std::runtime_error("No conectado al servidor");
     }
 
-    QDataStream ds(hdr);
-    ds.setByteOrder(QDataStream::BigEndian);
-    quint32 len = 0;
-    ds >> len;
-    qDebug() << "NetworkClientProxy: respuesta len=" << len;
-    int availableNow = socket->bytesAvailable();
-    qDebug() << "NetworkClientProxy: bytesAvailable after header:" << availableNow;
-
-    QByteArray body;
-    if (availableNow >= static_cast<int>(len))
+    // Si existe una respuesta en la cola, se devuelve inmediatamente
+    if (!colaRespuestas.isEmpty())
     {
-        body = socket->read(static_cast<int>(len));
-        qDebug() << "NetworkClientProxy: read full body immediately, size" << body.size();
-    }
-    else
-    {
-        waited = 0;
-        while (body.size() < static_cast<int>(len) && waited < timeoutMs)
-        {
-            if (!socket->waitForReadyRead(100))
-            {
-                waited += 100;
-                continue;
-            }
-            QByteArray chunk = socket->read(static_cast<int>(len) - body.size());
-            qDebug() << "NetworkClientProxy: read chunk size" << chunk.size();
-            body.append(chunk);
-        }
-    }
-    if (body.size() < static_cast<int>(len))
-    {
-        throw std::runtime_error("Timeout esperando cuerpo de respuesta");
+        QJsonObject r = colaRespuestas.dequeue();
+        return r;
     }
 
-    QJsonParseError err;
-    QJsonDocument doc = QJsonDocument::fromJson(body, &err);
-    if (err.error != QJsonParseError::NoError || !doc.isObject())
+    QEventLoop loop;
+    QTimer timeoutTimer;
+    timeoutTimer.setSingleShot(true);
+
+    // Cuando llegue una respuesta, salimos del loop
+    QMetaObject::Connection conn = connect(this, &NetworkClientProxy::respuestaRecibida, this, [&]()
+                                           {
+        if (!colaRespuestas.isEmpty())
+            loop.quit(); });
+
+    QObject::connect(&timeoutTimer, &QTimer::timeout, &loop, &QEventLoop::quit);
+    timeoutTimer.start(timeoutMs);
+
+    // Si no hay respuestas aún, entra al loop a esperar
+    if (colaRespuestas.isEmpty())
+        loop.exec();
+
+    disconnect(conn);
+
+    if (colaRespuestas.isEmpty())
     {
-        throw std::runtime_error(std::string("Respuesta JSON malformada: ") + err.errorString().toStdString());
+        throw std::runtime_error("Timeout esperando respuesta JSON");
     }
 
-    return doc.object();
+    return colaRespuestas.dequeue();
 }
 
 std::vector<InfoProducto> NetworkClientProxy::getMenu()
@@ -177,6 +164,58 @@ void NetworkClientProxy::finalizarPedido(const std::string &cliente, const std::
     {
         QString msg = resp.contains(Protocolo::KEY_MSG) ? resp.value(Protocolo::KEY_MSG).toString() : QString("Error desconocido");
         throw std::runtime_error(msg.toStdString());
+    }
+}
+
+/**
+ * @brief Slot asíncrono que procesa datos entrantes del socket y extrae mensajes framed
+ * emits respuestaRecibida cuando se parsea un mensaje completo
+ */
+void NetworkClientProxy::onDatosRecibidos()
+{
+    if (!socket)
+        return;
+
+    QByteArray chunk = socket->readAll();
+    qDebug() << "NetworkClientProxy::onDatosRecibidos: received chunk size" << chunk.size();
+    bufferAcumulado.append(chunk);
+
+    // Procesar todos los mensajes completos en el buffer
+    while (bufferAcumulado.size() >= static_cast<int>(sizeof(quint32)))
+    {
+        // Leer cabecera (4 bytes BE)
+        QByteArray hdr = bufferAcumulado.left(static_cast<int>(sizeof(quint32)));
+        QDataStream ds(hdr);
+        ds.setByteOrder(QDataStream::BigEndian);
+        quint32 len = 0;
+        ds >> len;
+        qDebug() << "NetworkClientProxy::onDatosRecibidos: next message len=" << len << " bufferSize=" << bufferAcumulado.size();
+
+        if (bufferAcumulado.size() < static_cast<int>(sizeof(quint32) + len))
+        {
+            // Aún no llegó todo el cuerpo
+            qDebug() << "NetworkClientProxy::onDatosRecibidos: mensaje fragmentado, esperando";
+            break;
+        }
+
+        // Extraer body
+        QByteArray body = bufferAcumulado.mid(static_cast<int>(sizeof(quint32)), static_cast<int>(len));
+        bufferAcumulado.remove(0, static_cast<int>(sizeof(quint32) + len));
+
+        QJsonParseError err;
+        QJsonDocument doc = QJsonDocument::fromJson(body, &err);
+        if (err.error != QJsonParseError::NoError || !doc.isObject())
+        {
+            qWarning() << "NetworkClientProxy: JSON malformado recibido:" << err.errorString();
+            continue; // intentar procesar próximos mensajes
+        }
+
+        QJsonObject obj = doc.object();
+        qDebug() << "NetworkClientProxy: parsed response:" << QJsonDocument(obj).toJson(QJsonDocument::Compact);
+
+        // Encolar y notificar
+        colaRespuestas.enqueue(obj);
+        emit respuestaRecibida(obj);
     }
 }
 
