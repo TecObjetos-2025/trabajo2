@@ -34,8 +34,12 @@ add_executable(CafeteriaClient
     ${PROJECT_SOURCES}
 )
 
+# Agregamos 'src' a los directorios de inclusión para resolver rutas como "logic/DtoMapper.h"
+target_include_directories(CafeteriaClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
 add_executable(TestNetworkProxy src/test_network_proxy.cpp src/NetworkClientProxy.cpp src/NetworkProtocol.h)
 target_link_libraries(TestNetworkProxy PRIVATE Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Core CafeteriaCommon)
+target_include_directories(TestNetworkProxy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(CafeteriaClient PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 
@@ -53,6 +57,7 @@ add_executable(TestMVP src/tests/test_presenters_pure.cpp
 )
 # Note: Presenters depend on ICoreSistema.h which is in CafeteriaCommon.
 target_link_libraries(TestMVP PRIVATE CafeteriaCommon)
+target_include_directories(TestMVP PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Target helper para ejecutar el cliente con LD_PRELOAD para evitar conflicto con snap
 add_custom_target(run-client

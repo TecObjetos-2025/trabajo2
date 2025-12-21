@@ -10,6 +10,7 @@
 #include <QThread>
 
 #include "../../common/include/api/Protocolo.h"
+#include "../../common/include/core/Configuracion.h"
 
 #include "NetworkProtocol.h"
 
@@ -405,7 +406,7 @@ std::vector<InfoDescuento> NetworkClientProxy::getDescuentosDisponibles()
 
 double NetworkClientProxy::getPorcentajeIGV() const
 {
-    return 0.0;
+    return Config::TASA_IGV;
 }
 
 std::vector<InfoPedido> NetworkClientProxy::getPedidosActivos()
